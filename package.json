@@ -1,0 +1,9 @@
+{
+  "name": "pwa-avaliacao-idosos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:watch": "node --test --watch"
+  }
+}
