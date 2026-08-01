@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { assessmentForCreate, assessmentForSave, measurementValue, personForSave, personFromApi } from '../web/js/sync-model.js';
+import { assessmentForCreate, assessmentForSave, assessmentFromApi, measurementValue, personForSave, personFromApi } from '../web/js/sync-model.js';
 
 test('does not turn an empty measurement field into zero', () => {
   assert.equal(measurementValue(''), null);
@@ -22,6 +22,12 @@ test('maps a person received from Sheets to the PWA model', () => {
 
 test('keeps the local assessment id when creating an assessment offline', () => {
   assert.equal(assessmentForCreate({ id: 'a-1', personId: 'p-1', date: '2026-08-01', professionalName: 'Elohim', testIds: ['sppb'] }).avaliacaoId, 'a-1');
+});
+
+test('maps an assessment received from Sheets for shared history', () => {
+  assert.deepEqual(assessmentFromApi({ avaliacaoId: 'a-1', pessoaId: 'p-1', data: '2026-08-01', profissionalNome: 'Elohim', status: 'concluida', testesSelecionados: '["sppb","step-2min"]' }), {
+    id: 'a-1', personId: 'p-1', date: '2026-08-01', professionalName: 'Elohim', status: 'concluida', testIds: ['sppb', 'step-2min']
+  });
 });
 
 test('splits bilateral official values into individual result records', () => {

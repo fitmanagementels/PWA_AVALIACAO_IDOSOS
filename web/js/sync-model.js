@@ -34,6 +34,19 @@ export function assessmentForCreate(assessment) {
   };
 }
 
+export function assessmentFromApi(assessment) {
+  let testIds = [];
+  try { testIds = Array.isArray(assessment.testesSelecionados) ? assessment.testesSelecionados : JSON.parse(assessment.testesSelecionados || '[]'); } catch (_) { testIds = []; }
+  return {
+    id: assessment.avaliacaoId,
+    personId: assessment.pessoaId,
+    date: assessment.data,
+    professionalName: assessment.profissionalNome,
+    status: assessment.status,
+    testIds
+  };
+}
+
 function resultRows(assessment, result) {
   if (result.status === 'naoConcluido') {
     return [{

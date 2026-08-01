@@ -1,7 +1,8 @@
 import { PROFESSIONALS, TESTS, buildAssessmentStart, whatsAppUrl } from '../domain.js';
 import { renderAssessmentEditor } from './assessment-editor.js';
 import { queueMutation } from '../storage.js';
-import { assessmentForCreate, personForSave, personFromApi } from '../sync-model.js';
+import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi } from '../sync-model.js';
+import { request } from '../api-client.js';
 const key = 'avaliacao-idosos-people';
 const read = () => JSON.parse(localStorage.getItem(key) || '[]');
 const write = (items) => localStorage.setItem(key, JSON.stringify(items));
@@ -20,7 +21,46 @@ function renderPersonForm(root) {
 function renderPerson(root, id) {
   const person = read().find((item) => item.id === id); if (!person) return renderPeople(root); const link = whatsAppUrl(person.whatsapp);
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${person.birthDate} · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
-  root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => renderStart(root, person); root.querySelector('[data-resume]').onclick = () => alert('Nenhum rascunho encontrado.'); root.querySelector('[data-history]').onclick = () => alert('O histórico aparecerá após avaliações salvas.');
+  root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => renderStart(root, person); root.querySelector('[data-resume]').onclick = () => resumeLatestDraft(root, person); root.querySelector('[data-history]').onclick = () => renderHistory(root, person);
+}
+
+function localAssessmentsFor(personId) {
+  return Object.keys(localStorage).filter((key) => key.startsWith('assessment:')).map((key) => JSON.parse(localStorage.getItem(key))).filter((assessment) => assessment.personId === personId);
+}
+function resumeLatestDraft(root, person) {
+  const assessment = localAssessmentsFor(person.id).sort((a, b) => String(b.updatedAt || b.date).localeCompare(String(a.updatedAt || a.date)))[0];
+  if (!assessment) return alert('Nenhum rascunho neste aparelho. Consulte o histórico para avaliações já sincronizadas.');
+  renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id));
+}
+async function renderHistory(root, person) {
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>Carregando avaliações salvas na planilha…</p></div><button class="secondary" data-back>Voltar</button></section>`;
+  root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+  try {
+    const response = await request('getHistory', { pessoaId: person.id }, 'GET');
+    const assessments = response.data.map(assessmentFromApi);
+    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.'}</p></div><button class="secondary" data-back>Voltar</button></section>${assessments.length ? `<section class="list">${assessments.map((assessment) => `<button class="person-card" data-assessment-id="${assessment.id}"><strong>${assessment.date}</strong><span>${assessment.professionalName} · ${assessment.status}</span></button>`).join('')}</section>` : '<article class="empty-state"><h2>Sem avaliações salvas</h2><p>Os rascunhos deste aparelho podem ser retomados na tela anterior.</p></article>'}`;
+    root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+    root.querySelectorAll('[data-assessment-id]').forEach((button) => button.onclick = () => renderAssessmentHistory(root, person, button.dataset.assessmentId));
+  } catch (error) {
+    root.querySelector('.screen-title p:not(.eyebrow)').textContent = `Não foi possível carregar o histórico: ${error.message}`;
+  }
+}
+async function renderAssessmentHistory(root, person, assessmentId) {
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${person.name}</h1><p>Carregando resultados…</p></div><button class="secondary" data-back>Voltar</button></section>`;
+  root.querySelector('[data-back]').onclick = () => renderHistory(root, person);
+  try {
+    const response = await request('getAssessment', { avaliacaoId: assessmentId }, 'GET');
+    const assessment = assessmentFromApi(response.data.assessment);
+    const results = response.data.results;
+    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${assessment.date}</h1><p>${assessment.professionalName} · ${assessment.status}</p></div><button class="secondary" data-back>Voltar</button></section><section class="list">${results.length ? results.map((result) => `<article class="empty-state"><strong>${testName(result.testeId)}${result.lado ? ` · ${result.lado}` : ''}</strong><p>${result.status === 'naoConcluido' ? `Não concluído: ${result.motivoNaoConcluido}` : `${result.valorOficial} ${result.unidade}${result.classificacao ? ` · ${result.classificacao}` : ''}`}</p></article>`).join('') : '<article class="empty-state"><p>Sem resultados registrados.</p></article>'}</section><section class="action-grid"><button data-report>Exportar relatório PDF</button></section><p class="form-message"></p>`;
+    root.querySelector('[data-back]').onclick = () => renderHistory(root, person);
+    root.querySelector('[data-report]').onclick = async () => {
+      const message = root.querySelector('.form-message'); message.textContent = 'Gerando relatório…';
+      try { const report = await request('generateReport', { avaliacaoId: assessment.id }); message.textContent = 'Relatório gerado. Abrindo arquivo…'; window.open(report.data.url, '_blank', 'noopener'); } catch (error) { message.textContent = error.message; }
+    };
+  } catch (error) {
+    root.querySelector('.screen-title p:not(.eyebrow)').textContent = `Não foi possível carregar esta avaliação: ${error.message}`;
+  }
 }
 function renderStart(root, person) {
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVA AVALIAÇÃO</p><h1>${person.name}</h1><p>Escolha os testes desta sessão.</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Data<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label><label>Profissional<select name="professionalName" required><option value="">Selecione</option>${PROFESSIONALS.map((name) => `<option>${name}</option>`).join('')}</select></label><fieldset><legend>Testes</legend>${TESTS.map(([id, name]) => `<label class="check-option"><input type="checkbox" name="testIds" value="${id}"><span>${name}</span></label>`).join('')}</fieldset><button>Iniciar avaliação</button><p class="form-message"></p></form>`;
