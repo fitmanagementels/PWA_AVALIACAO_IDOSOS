@@ -1,10 +1,11 @@
 import { PROFESSIONALS, TESTS, buildAssessmentStart, whatsAppUrl } from '../domain.js';
 import { renderAssessmentEditor } from './assessment-editor.js';
 import { queueMutation } from '../storage.js';
-import { assessmentForCreate, personForSave } from '../sync-model.js';
+import { assessmentForCreate, personForSave, personFromApi } from '../sync-model.js';
 const key = 'avaliacao-idosos-people';
 const read = () => JSON.parse(localStorage.getItem(key) || '[]');
 const write = (items) => localStorage.setItem(key, JSON.stringify(items));
+export function replacePeopleFromApi(records) { write(records.map(personFromApi)); }
 export function renderPeople(root) {
   const people = read();
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><section class="list">${people.length ? people.map((p) => `<button class="person-card" data-id="${p.id}"><strong>${p.name}</strong><span>${p.birthDate} · ${p.sex}</span></button>`).join('') : '<article class="empty-state"><h2>Nenhuma pessoa cadastrada</h2><p>Cadastre o primeiro aluno para iniciar uma avaliação.</p></article>'}</section>`;

@@ -14,6 +14,16 @@ export function personForSave(person) {
   };
 }
 
+export function personFromApi(person) {
+  return {
+    id: person.pessoaId,
+    name: person.nomeCompleto,
+    birthDate: person.dataNascimento,
+    sex: person.sexo,
+    whatsapp: person.whatsApp || ''
+  };
+}
+
 export function assessmentForCreate(assessment) {
   return {
     avaliacaoId: assessment.id,

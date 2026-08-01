@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { assessmentForCreate, assessmentForSave, measurementValue, personForSave } from '../web/js/sync-model.js';
+import { assessmentForCreate, assessmentForSave, measurementValue, personForSave, personFromApi } from '../web/js/sync-model.js';
 
 test('does not turn an empty measurement field into zero', () => {
   assert.equal(measurementValue(''), null);
@@ -11,6 +11,12 @@ test('does not turn an empty measurement field into zero', () => {
 test('maps a local person to the Apps Script contract', () => {
   assert.deepEqual(personForSave({ id: 'p-1', name: 'Maria', birthDate: '1950-01-01', sex: 'feminino', whatsapp: '5585999999999' }), {
     pessoaId: 'p-1', nomeCompleto: 'Maria', dataNascimento: '1950-01-01', sexo: 'feminino', whatsApp: '5585999999999'
+  });
+});
+
+test('maps a person received from Sheets to the PWA model', () => {
+  assert.deepEqual(personFromApi({ pessoaId: 'p-1', nomeCompleto: 'Maria', dataNascimento: '1950-01-01', sexo: 'feminino', whatsApp: '5585999999999' }), {
+    id: 'p-1', name: 'Maria', birthDate: '1950-01-01', sex: 'feminino', whatsapp: '5585999999999'
   });
 });
 
