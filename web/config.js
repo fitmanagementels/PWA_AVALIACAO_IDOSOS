@@ -1,2 +1,1 @@
-// Preencha com a URL /exec da implantação Web app do Apps Script antes de publicar.
-window.APP_API_URL = '';
+window.APP_API_URL = 'https://script.google.com/macros/s/AKfycbynscVTVM4nQ0q4LUuFCVjW5lWDNouIvxNKZpENkOfHkpw-UOTBySLOlH8qvJyUkBEt/exec';
