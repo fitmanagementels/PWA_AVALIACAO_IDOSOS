@@ -1,0 +1,10 @@
+{
+  "timeZone": "America/Fortaleza",
+  "dependencies": {
+  },
+  "executionApi": {
+    "access": "MYSELF"
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8"
+}

@@ -1,7 +1,6 @@
 function spreadsheet_() {
   const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-  if (!id) throw new Error('Defina a propriedade SPREADSHEET_ID antes de usar o aplicativo');
-  return SpreadsheetApp.openById(id);
+  return id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActiveSpreadsheet();
 }
 
 function getRows_(sheetName) {
