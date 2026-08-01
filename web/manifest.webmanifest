@@ -1,0 +1,9 @@
+{
+  "name": "Avaliação de Idosos",
+  "short_name": "Avaliações",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f7f4",
+  "theme_color": "#174b3a",
+  "icons": [{ "src": "./icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
