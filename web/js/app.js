@@ -1,5 +1,6 @@
 import { mutationQueue } from './storage.js';
 import { request } from './api-client.js';
+import { renderPeople } from './views/people.js';
 
 const status = document.querySelector('[data-sync-status]');
 function setStatus(text) { status.textContent = text; }
@@ -14,3 +15,4 @@ window.addEventListener('offline', () => setStatus('offline · dados pendentes f
 document.querySelector('[data-sync-now]').addEventListener('click', synchronize);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 setStatus(navigator.onLine ? 'sincronizado' : 'offline · dados pendentes ficam neste aparelho');
+renderPeople(document.querySelector('#app'));
