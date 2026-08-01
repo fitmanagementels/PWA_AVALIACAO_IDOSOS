@@ -9,10 +9,13 @@ async function synchronize() {
   setStatus('sincronizando');
   const result = await mutationQueue.flush(({ action, payload }) => request(action, payload).catch((error) => ({ ok: false, error })));
   setStatus(result.ok ? 'sincronizado' : 'envio pendente');
+  return result;
 }
 window.addEventListener('online', synchronize);
 window.addEventListener('offline', () => setStatus('offline · dados pendentes ficam neste aparelho'));
+document.addEventListener('sync-requested', synchronize);
 document.querySelector('[data-sync-now]').addEventListener('click', synchronize);
+window.syncNow = synchronize;
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 setStatus(navigator.onLine ? 'sincronizado' : 'offline · dados pendentes ficam neste aparelho');
 renderPeople(document.querySelector('#app'));

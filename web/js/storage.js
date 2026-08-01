@@ -37,3 +37,9 @@ function indexedStore(name) {
 export const mutationQueue = typeof indexedDB === 'undefined' ? null : createMutationQueue(indexedStore('mutations'));
 export async function saveDraft(draft) { return indexedStore('drafts').put({ ...draft, savedAt: new Date().toISOString() }); }
 export async function getDraft(id) { return (await indexedStore('drafts').getAll()).find((draft) => draft.id === id) || null; }
+
+export async function queueMutation(action, payload) {
+  if (!mutationQueue) throw new Error('Este navegador não oferece armazenamento local para sincronização.');
+  await mutationQueue.enqueue({ id: crypto.randomUUID(), action, payload });
+  document.dispatchEvent(new Event('sync-requested'));
+}

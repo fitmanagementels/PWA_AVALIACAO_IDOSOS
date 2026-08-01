@@ -25,6 +25,8 @@ function updateRowById_(sheetName, idColumn, record) {
 
 function withLock_(work) { const lock = LockService.getScriptLock(); lock.waitLock(30000); try { return work(); } finally { lock.releaseLock(); } }
 
+function fieldOrBlank_(value) { return value === undefined || value === null ? '' : value; }
+
 function setupSpreadsheet() {
   const book = spreadsheet_();
   Object.keys(SHEET_HEADERS).forEach(function(name) { const sheet = book.getSheetByName(name) || book.insertSheet(name); if (sheet.getLastRow() === 0) sheet.appendRow(SHEET_HEADERS[name]); });

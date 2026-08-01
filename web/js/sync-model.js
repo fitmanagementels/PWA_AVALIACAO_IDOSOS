@@ -1,0 +1,73 @@
+export function measurementValue(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const parsed = Number(String(value).replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function personForSave(person) {
+  return {
+    pessoaId: person.id,
+    nomeCompleto: person.name,
+    dataNascimento: person.birthDate,
+    sexo: person.sex,
+    whatsApp: person.whatsapp || ''
+  };
+}
+
+export function assessmentForCreate(assessment) {
+  return {
+    avaliacaoId: assessment.id,
+    pessoaId: assessment.personId,
+    data: assessment.date,
+    profissionalNome: assessment.professionalName,
+    testesSelecionados: assessment.testIds
+  };
+}
+
+function resultRows(assessment, result) {
+  if (result.status === 'naoConcluido') {
+    return [{
+      resultadoId: `${assessment.id}:${result.testId}`,
+      testeId: result.testId,
+      status: result.status,
+      lado: '',
+      valorOficial: '',
+      unidade: result.unit || '',
+      classificacao: result.classification || '',
+      protocoloVersao: 1,
+      motivoNaoConcluido: result.reason,
+      tentativas: []
+    }];
+  }
+  return Object.entries(result.officialBySide || {}).map(([side, officialValue]) => ({
+    resultadoId: `${assessment.id}:${result.testId}:${side}`,
+    testeId: result.testId,
+    status: result.status,
+    lado: side === 'unico' ? '' : side,
+    valorOficial: officialValue,
+    unidade: result.unit,
+    classificacao: result.classification || '',
+    protocoloVersao: 1,
+    motivoNaoConcluido: '',
+    tentativas: (result.attempts || []).filter((attempt) => (attempt.side || 'unico') === side).map((attempt, index) => ({
+      ordem: index + 1,
+      lado: side === 'unico' ? '' : side,
+      valor: attempt.value,
+      unidade: result.unit,
+      valida: true
+    }))
+  }));
+}
+
+export function assessmentForSave(assessment) {
+  return {
+    avaliacaoId: assessment.id,
+    pessoaId: assessment.personId,
+    data: assessment.date,
+    profissionalNome: assessment.professionalName,
+    testesSelecionados: assessment.testIds,
+    notasTestes: assessment.testNotes || '',
+    observacoesAluno: assessment.studentObservations || '',
+    resultados: (assessment.results || []).flatMap((result) => resultRows(assessment, result))
+  };
+}
