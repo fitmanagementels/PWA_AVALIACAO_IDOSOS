@@ -30,3 +30,9 @@ test('provides a server-side backfill for history summaries', () => {
   assert.match(source, /updateHistorySummary_\(assessment, resultsByAssessment\[assessment\.avaliacaoId\] \|\| \[\]\)/);
   assert.doesNotMatch(source, /\|\|=/);
 });
+
+test('initializes the history summary before reading it', () => {
+  const source = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+  assert.match(source, /function getHistorySummary\(params\) \{ ensureHistorySummary_\(\);/);
+  assert.match(source, /function ensureHistorySummary_\(\)/);
+});
