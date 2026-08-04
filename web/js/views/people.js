@@ -2,6 +2,7 @@ import { PROFESSIONALS, TESTS, buildAssessmentStart, whatsAppUrl } from '../doma
 import { renderAssessmentEditor } from './assessment-editor.js';
 import { historyTimeline } from './history.js';
 import { defaultReportTestIds } from './report-selection.js';
+import { formatDateBr } from '../date-format.js';
 import { queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
@@ -12,7 +13,7 @@ const write = (items) => localStorage.setItem(key, JSON.stringify(items));
 export function replacePeopleFromApi(records) { write(records.map(personFromApi)); }
 export function renderPeople(root) {
   const people = read();
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><section class="list">${people.length ? people.map((p) => `<button class="person-card" data-id="${p.id}"><strong>${p.name}</strong><span>${p.birthDate} · ${p.sex}</span></button>`).join('') : '<article class="empty-state"><h2>Nenhuma pessoa cadastrada</h2><p>Cadastre o primeiro aluno para iniciar uma avaliação.</p></article>'}</section>`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><section class="list">${people.length ? people.map((p) => `<button class="person-card" data-id="${p.id}"><strong>${p.name}</strong><span>${formatDateBr(p.birthDate)} · ${p.sex}</span></button>`).join('') : '<article class="empty-state"><h2>Nenhuma pessoa cadastrada</h2><p>Cadastre o primeiro aluno para iniciar uma avaliação.</p></article>'}</section>`;
   root.querySelector('[data-new]').onclick = () => renderPersonForm(root);
   root.querySelectorAll('[data-id]').forEach((button) => button.onclick = () => renderPerson(root, button.dataset.id));
 }
@@ -23,7 +24,7 @@ function renderPersonForm(root) {
 }
 function renderPerson(root, id) {
   const person = read().find((item) => item.id === id); if (!person) return renderPeople(root); const link = whatsAppUrl(person.whatsapp);
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${person.birthDate} · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${formatDateBr(person.birthDate)} · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
   root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => renderStart(root, person); root.querySelector('[data-resume]').onclick = () => resumeLatestDraft(root, person); root.querySelector('[data-history]').onclick = () => renderHistory(root, person);
 }
 
@@ -42,7 +43,7 @@ async function renderHistory(root, person) {
     const response = await request('getHistory', { pessoaId: person.id }, 'GET');
     const records = response.data.map((item) => ({ assessment: assessmentFromApi(item.assessment), results: resultsFromApi(item.results) }));
     const assessments = historyTimeline(records, person);
-    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.'}</p></div><button class="secondary" data-back>Voltar</button></section>${assessments.length ? `<section class="list">${assessments.map((assessment) => `<button class="person-card" data-assessment-id="${assessment.assessmentId}"><strong>${assessment.date}</strong><span>${assessment.professionalName} · ${assessment.status} · ${assessment.colors.green} verdes · ${assessment.colors.yellow} amarelos · ${assessment.colors.gray} cinzas</span></button>`).join('')}</section>` : '<article class="empty-state"><h2>Sem avaliações salvas</h2><p>Os rascunhos deste aparelho podem ser retomados na tela anterior.</p></article>'}`;
+    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.'}</p></div><button class="secondary" data-back>Voltar</button></section>${assessments.length ? `<section class="list">${assessments.map((assessment) => `<button class="person-card" data-assessment-id="${assessment.assessmentId}"><strong>${formatDateBr(assessment.date)}</strong><span>${assessment.professionalName} · ${assessment.status} · ${assessment.colors.green} verdes · ${assessment.colors.yellow} amarelos · ${assessment.colors.gray} cinzas</span></button>`).join('')}</section>` : '<article class="empty-state"><h2>Sem avaliações salvas</h2><p>Os rascunhos deste aparelho podem ser retomados na tela anterior.</p></article>'}`;
     root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
     root.querySelectorAll('[data-assessment-id]').forEach((button) => button.onclick = () => renderAssessmentHistory(root, person, button.dataset.assessmentId));
   } catch (error) {
@@ -56,7 +57,7 @@ async function renderAssessmentHistory(root, person, assessmentId) {
     const response = await request('getAssessment', { avaliacaoId: assessmentId }, 'GET');
     const assessment = assessmentFromApi(response.data.assessment);
     const results = response.data.results;
-    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${assessment.date}</h1><p>${assessment.professionalName} · ${assessment.status}</p></div><button class="secondary" data-back>Voltar</button></section><section class="list">${results.length ? results.map((result) => `<article class="empty-state"><strong>${testName(result.testeId)}${result.lado ? ` · ${result.lado}` : ''}</strong><p>${result.status === 'naoConcluido' ? `Não concluído: ${result.motivoNaoConcluido}` : `${result.valorOficial} ${result.unidade}${result.classificacao ? ` · ${result.classificacao}` : ''}`}</p></article>`).join('') : '<article class="empty-state"><p>Sem resultados registrados.</p></article>'}</section><section class="action-grid"><button class="secondary" data-edit>Editar e complementar</button><button data-report>Exportar relatório PDF</button></section><p class="form-message"></p>`;
+    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${formatDateBr(assessment.date)}</h1><p>${assessment.professionalName} · ${assessment.status}</p></div><button class="secondary" data-back>Voltar</button></section><section class="list">${results.length ? results.map((result) => `<article class="empty-state"><strong>${testName(result.testeId)}${result.lado ? ` · ${result.lado}` : ''}</strong><p>${result.status === 'naoConcluido' ? `Não concluído: ${result.motivoNaoConcluido}` : `${result.valorOficial} ${result.unidade}${result.classificacao ? ` · ${result.classificacao}` : ''}`}</p></article>`).join('') : '<article class="empty-state"><p>Sem resultados registrados.</p></article>'}</section><section class="action-grid"><button class="secondary" data-edit>Editar e complementar</button><button data-report>Exportar relatório PDF</button></section><p class="form-message"></p>`;
     root.querySelector('[data-back]').onclick = () => renderHistory(root, person);
     root.querySelector('[data-edit]').onclick = () => {
       const editable = { ...assessment, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, results: resultsFromApi(results) };
