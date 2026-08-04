@@ -9,3 +9,9 @@ test('renders tests as closed details cards and persists draft inputs', () => {
   assert.match(source, /draftInputs/);
   assert.match(source, /saveDraft\(assessment\)/);
 });
+
+test('offers adding tests and manual completion', () => {
+  assert.match(source, /data-add-tests/);
+  assert.match(source, /data-action="complete"/);
+  assert.match(source, /assessmentReadiness/);
+});
