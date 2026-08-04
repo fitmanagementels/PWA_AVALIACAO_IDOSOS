@@ -28,4 +28,5 @@ test('provides a server-side backfill for history summaries', () => {
   assert.match(source, /function rebuildHistorySummaries\(\)/);
   assert.match(source, /const resultsByAssessment = getRows_\(SHEETS\.RESULTS\)/);
   assert.match(source, /updateHistorySummary_\(assessment, resultsByAssessment\[assessment\.avaliacaoId\] \|\| \[\]\)/);
+  assert.doesNotMatch(source, /\|\|=/);
 });
