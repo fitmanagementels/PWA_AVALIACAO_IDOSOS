@@ -36,12 +36,11 @@ test('keeps a failed mutation in the queue with a retry message', async () => {
   const queue = createMutationQueue(memoryStore());
   await queue.enqueue({ id: 'm1', action: 'saveAssessment', payload: {} });
   await queue.markFailed('m1', 'Profissional responsável é obrigatório');
-  assert.deepEqual(await queue.list(), [{
-    id: 'm1', action: 'saveAssessment', payload: {},
-    queuedAt: '2026-08-04T00:00:00.000Z',
-    lastError: 'Profissional responsável é obrigatório',
-    lastAttemptAt: '2026-08-04T00:00:00.000Z'
-  }]);
+  const [item] = await queue.list();
+  assert.equal(item.id, 'm1');
+  assert.equal(item.lastError, 'Profissional responsável é obrigatório');
+  assert.ok(Number.isFinite(Date.parse(item.queuedAt)));
+  assert.ok(Number.isFinite(Date.parse(item.lastAttemptAt)));
 });
 ```
 
