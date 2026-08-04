@@ -1,8 +1,8 @@
 ## Orquestração BRAND
 - Pedido e contexto detectado: adaptar o PWA operacional existente de avaliação funcional, com prioridade para clareza do estado de sincronização e preservação do fluxo clínico.
 - Rota escolhida e justificativa: frontend existente → auditoria e somente encaminhamentos justificados, pois o PWA já possui telas, formulários e integração com Apps Script em funcionamento parcial.
-- Skills executadas: brand-orquestrar-fluxo-visual; brand-auditar-e-alinhar-frontend; brand-criar-navegacao-interacao.
-- Skills não usadas e motivo: brand-organizar-informacao-visual não será usada: a composição linear existente já corresponde ao fluxo clínico sequencial. brand-aplicar-marca-e-acabamento será executada ao aplicar o tema aprovado.
+- Skills executadas: brand-orquestrar-fluxo-visual; brand-auditar-e-alinhar-frontend; brand-criar-navegacao-interacao; brand-aplicar-marca-e-acabamento.
+- Skills não usadas e motivo: brand-organizar-informacao-visual não foi usada: a composição linear existente já corresponde ao fluxo clínico sequencial.
 - Premissas assumidas: preservar o modelo de dados, as chamadas de API e a fila local; melhorar feedback visual de carregamento, sincronização, erro e pendências.
 - Pergunta pendente, se houver: nenhuma.
 
@@ -57,3 +57,33 @@
 - Transições (`transform`/`opacity`, 180–250 ms): entrada e troca de estado da faixa de sincronização; sem animação em campos ou registros clínicos.
 - Comportamento com `prefers-reduced-motion`: mudança instantânea de estado, preservando ícone, texto e ação.
 - Foco, teclado e toque: botão de sincronizar possui foco lime visível, rótulo textual e alvo mínimo de 44 px; mensagens usam `aria-live` sem roubar o foco.
+
+## Marca e acabamento
+- Voz visual aplicada: dark premium operacional, com contraste alto e sem ornamentação concorrente.
+- Tema final e proporção dark (mínimo 60%): tema integralmente dark.
+- Uso permitido de #E2FF42 — marca/foco/ação/métrica: CTA primário, foco visível e indicador de envio.
+- Uso de geometria e efeitos: sem geometria decorativa; blur restrito à faixa fixa de sincronização.
+
+### Tokens aplicados
+| Categoria | Token | Valor | Uso |
+|---|---|---|---|
+| Superfície | `--surface-base` | `#07110f` | página |
+| Superfície | `--surface-card` | `#101d1a` | cartões e formulários |
+| Superfície | `--surface-active` | `#172a25` | seleção e painel |
+| Superfície | `--surface-overlay` | `#0d1815` | faixa fixa |
+| Ação/foco | `--focus` | `#E2FF42` | CTA e foco de teclado |
+
+### Quatro superfícies
+| Nível | Token | Luminância/borda | Conteúdo |
+|---|---|---|---|
+| base | `--surface-base` | mais escura | página |
+| card | `--surface-card` | borda `--border` | formulários e listas |
+| ativo | `--surface-active` | luminância intermediária | hover e pendências |
+| overlay | `--surface-overlay` | backdrop e borda | faixa de sincronização |
+
+### Verificação final
+- Desktop — contraste, foco, dados e estados: cobertos por tokens, foco e testes estruturais; captura automatizada permanece limitada pelo Chrome headless do ambiente.
+- Mobile — ordem, alcance, legibilidade, overflow e overlays: CSS reduz cabeçalho, faixa e ações para uma coluna até 480 px.
+- Motion com `transform`/`opacity`: somente faixa e painel de sincronização.
+- `prefers-reduced-motion`: transições e animações não essenciais são removidas.
+- Pendências restantes: validação manual em navegador real antes da publicação.
