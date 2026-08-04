@@ -1,12 +1,45 @@
 ## Orquestração BRAND
-- Pedido e contexto detectado: adaptar o PWA operacional existente de avaliação funcional, com prioridade para clareza do estado de sincronização e preservação do fluxo clínico.
-- Rota escolhida e justificativa: frontend existente → auditoria e somente encaminhamentos justificados, pois o PWA já possui telas, formulários e integração com Apps Script em funcionamento parcial.
+- Pedido e contexto detectado: aprimorar a seleção de testes do PWA operacional existente, mantendo o padrão XSTEAM, sem classificação dos testes e sem mudar o fluxo clínico.
+- Rota escolhida e justificativa: frontend existente → auditoria → navegação/interação → acabamento, pois o problema observado está no controle de seleção e nos seus estados, não na arquitetura das telas.
 - Skills executadas: brand-orquestrar-fluxo-visual; brand-auditar-e-alinhar-frontend; brand-criar-navegacao-interacao; brand-aplicar-marca-e-acabamento.
 - Skills não usadas e motivo: brand-organizar-informacao-visual não foi usada: a composição linear existente já corresponde ao fluxo clínico sequencial.
-- Premissas assumidas: preservar o modelo de dados, as chamadas de API e a fila local; melhorar feedback visual de carregamento, sincronização, erro e pendências.
+- Premissas assumidas: preservar o modelo de dados, as chamadas de API, a fila local e os nomes/ordem dos testes; cartões substituem a aparência do checkbox, mas mantêm os inputs nativos e a submissão atual.
 - Pergunta pendente, se houver: nenhuma.
 
 ## Auditoria e contrato de adaptação
+
+### Aditivo — seleção de testes (04/08/2026)
+
+#### Inventário e evidências
+- Rotina crítica: profissional escolhe um ou mais testes antes de iniciar uma avaliação; `renderStart` mantém data, profissional, `testIds` e a validação atual.
+- Estrutura, componentes e integrações: `fieldset` com seis `label.check-option`, checkbox nativo e CTA “Iniciar avaliação”; os dados seguem para `buildAssessmentStart` sem mudança de contrato.
+- Estados e viewports verificados: desktop publicado na captura enviada; código/CSS para mobile. Não foi possível capturar o viewport móvel real neste ambiente.
+- Limitações da auditoria: a captura representa o estado sem teste selecionado; seleção múltipla será protegida por testes estruturais e validação manual no PWA publicado.
+
+#### Preservar
+- Seleção múltipla, data e profissional — são entradas exigidas pela criação da sessão — manter `name="testIds"`, valores e validação existente.
+- CTA único “Iniciar avaliação” — já materializa o próximo passo correto — mantê-lo como ação dominante, apenas qualificando-o com a contagem escolhida.
+- Sem modal/drawer — escolher testes é uma rotina curta e linear — manter a pessoa na mesma tela.
+
+#### Diagnóstico priorizado
+| Prioridade | Achado | Evidência | Impacto | Mudança mínima | Verificação |
+|---|---|---|---|---|---|
+| bloqueadoras | Nenhuma | seleção funcional e o formulário preserva o contrato de dados | — | não aplicar reformulação estrutural | regressão dos testes atuais |
+| alto impacto | Checkbox nativo aparece isolado e os nomes ficam distantes no desktop | captura enviada: caixas brancas desalinhadas no meio da coluna e rótulos à direita | toque, associação visual e leitura por varredura ficam lentos | transformar cada `label` em cartão selecionável, com controle customizado e área inteira acionável | clicar em texto/cartão alterna seleção e mantém `FormData` |
+| alto impacto | Não existe feedback resumido da seleção antes da ação primária | `fieldset` só expõe o título “Testes” | profissional não confirma rapidamente o escopo da sessão | contador textual de testes selecionados e rótulo dinâmico do CTA | zero, um e múltiplos testes informam a mesma contagem |
+| polimento | Testes não têm contexto funcional durante a escolha | nomes técnicos em lista plana | mais esforço para localizar o teste desejado | chip discreto de domínio funcional; sem alterar nomes ou ordem | leitura em desktop e mobile sem overflow |
+
+#### Sequência de adaptação
+1. Aplicar cartões de seleção e indicador visual sem mudar inputs, valores ou submissão.
+2. Atualizar contador e CTA no mesmo evento de `change`, incluindo foco visível e estados vazios.
+3. Verificar seleção por teclado, toque, desktop e mobile; preservar `prefers-reduced-motion`.
+
+#### Encaminhamento seletivo
+| Skill | Usar? | Evidência que justifica | Resultado esperado |
+|---|---|---|---|
+| brand-organizar-informacao-visual | Não | a tela continua linear, um card focal e uma ação primária; o defeito é do componente de escolha | evitar mudança desnecessária de estrutura |
+| brand-criar-navegacao-interacao | Sim | seleção, contador e CTA precisam refletir estado e ter alvos de toque corretos | escolha imediata, legível e recuperável |
+| brand-aplicar-marca-e-acabamento | Sim | checkbox nativo e estado selecionado não expressam as superfícies/tokens XSTEAM | componente dark premium com foco e contraste |
 
 ### Inventário e evidências
 - Rotinas críticas: cadastrar pessoa; iniciar avaliação; salvar/concluir avaliação; sincronizar a fila; consultar histórico e gerar relatório.
