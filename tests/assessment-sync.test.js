@@ -17,9 +17,11 @@ test('keeps only the newest pending mutation for one assessment', async () => {
   await queue.enqueueAssessment({ assessmentId: 'a1', action: 'saveAssessment', payload: { revision: 1 } });
   await queue.enqueueAssessment({ assessmentId: 'a1', action: 'saveAssessment', payload: { revision: 2 } });
 
-  assert.deepEqual(await queue.list(), [{
+  const [mutation] = await queue.list();
+  assert.deepEqual({ id: mutation.id, assessmentId: mutation.assessmentId, action: mutation.action, payload: mutation.payload }, {
     id: 'assessment:a1', assessmentId: 'a1', action: 'saveAssessment', payload: { revision: 2 }
-  }]);
+  });
+  assert.ok(Number.isFinite(Date.parse(mutation.queuedAt)));
 });
 
 test('blocks completion when a selected test has no result', () => {

@@ -2,12 +2,25 @@ export function createMutationQueue(store) {
   return {
     async enqueue(mutation) { await store.put({ ...mutation, queuedAt: mutation.queuedAt || new Date().toISOString() }); },
     async enqueueAssessment({ assessmentId, action, payload }) {
-      await store.put({ id: `assessment:${assessmentId}`, assessmentId, action, payload });
+      const id = `assessment:${assessmentId}`;
+      const existing = (await store.getAll()).find((item) => item.id === id);
+      await store.put({ id, assessmentId, action, payload, queuedAt: existing?.queuedAt || new Date().toISOString() });
     },
     async hasPendingAssessment(assessmentId) {
       return (await store.getAll()).some((item) => item.assessmentId === assessmentId);
     },
     async list() { return (await store.getAll()).sort((a, b) => String(a.queuedAt || '').localeCompare(String(b.queuedAt || ''))); },
+    async markFailed(id, message) {
+      const mutation = (await store.getAll()).find((item) => item.id === id);
+      if (!mutation) return;
+      await store.put({ ...mutation, lastError: message, lastAttemptAt: new Date().toISOString() });
+    },
+    async clearFailure(id) {
+      const mutation = (await store.getAll()).find((item) => item.id === id);
+      if (!mutation) return;
+      const { lastError, ...clean } = mutation;
+      await store.put(clean);
+    },
     async flush(send) {
       for (const mutation of await this.list()) {
         const response = await send(mutation);
