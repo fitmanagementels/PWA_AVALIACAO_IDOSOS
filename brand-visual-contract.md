@@ -8,31 +8,32 @@
 
 ## Auditoria e contrato de adaptação
 
-### Aditivo — seleção de testes (04/08/2026)
+### Aditivo — todos os controles de seleção (04/08/2026)
 
 #### Inventário e evidências
-- Rotina crítica: profissional escolhe um ou mais testes antes de iniciar uma avaliação; `renderStart` mantém data, profissional, `testIds` e a validação atual.
-- Estrutura, componentes e integrações: `fieldset` com seis `label.check-option`, checkbox nativo e CTA “Iniciar avaliação”; os dados seguem para `buildAssessmentStart` sem mudança de contrato.
+- Rotinas críticas: profissional escolhe testes antes da avaliação, adiciona testes ao rascunho, escolhe testes do PDF e marca “Não concluído” quando necessário; os dados seguem sem mudança de contrato.
+- Estrutura, componentes e integrações: `renderStart`, `assessment-editor` e seleção de relatório usam os mesmos `label.check-option`; os dados seguem para `buildAssessmentStart`, `addSelectedTests`, `collectResult` e `generateReport`.
 - Estados e viewports verificados: desktop publicado na captura enviada; código/CSS para mobile. Não foi possível capturar o viewport móvel real neste ambiente.
 - Limitações da auditoria: a captura representa o estado sem teste selecionado; seleção múltipla será protegida por testes estruturais e validação manual no PWA publicado.
 
 #### Preservar
-- Seleção múltipla, data e profissional — são entradas exigidas pela criação da sessão — manter `name="testIds"`, valores e validação existente.
-- CTA único “Iniciar avaliação” — já materializa o próximo passo correto — mantê-lo como ação dominante, apenas qualificando-o com a contagem escolhida.
+- Seleção múltipla, data e profissional — são entradas exigidas pela criação da sessão — manter `name="testIds"`, `additionalTestIds`, `includedTestIds`, valores e validações existentes.
+- CTAs de iniciar, adicionar e gerar PDF — já materializam os próximos passos corretos — mantê-los como ações dominantes, apenas qualificando-os com a contagem escolhida.
 - Sem modal/drawer — escolher testes é uma rotina curta e linear — manter a pessoa na mesma tela.
 
 #### Diagnóstico priorizado
 | Prioridade | Achado | Evidência | Impacto | Mudança mínima | Verificação |
 |---|---|---|---|---|---|
 | bloqueadoras | Nenhuma | seleção funcional e o formulário preserva o contrato de dados | — | não aplicar reformulação estrutural | regressão dos testes atuais |
-| alto impacto | Checkbox nativo aparece isolado e os nomes ficam distantes no desktop | captura enviada: caixas brancas desalinhadas no meio da coluna e rótulos à direita | toque, associação visual e leitura por varredura ficam lentos | transformar cada `label` em cartão selecionável, com controle customizado e área inteira acionável | clicar em texto/cartão alterna seleção e mantém `FormData` |
-| alto impacto | Não existe feedback resumido da seleção antes da ação primária | `fieldset` só expõe o título “Testes” | profissional não confirma rapidamente o escopo da sessão | contador textual de testes selecionados e rótulo dinâmico do CTA | zero, um e múltiplos testes informam a mesma contagem |
+| alto impacto | Checkbox nativo aparece isolado e os nomes ficam distantes no desktop | captura enviada e `check-option` reutilizada no início, adição e PDF | toque, associação visual e leitura por varredura ficam lentos em todos os locais | transformar cada `label` em cartão selecionável, com controle customizado e área inteira acionável | clicar em texto/cartão alterna seleção e mantém `FormData` |
+| alto impacto | Não existe feedback resumido da seleção antes das ações primárias | `fieldset`, adição e relatório não expõem contagem | profissional não confirma rapidamente o escopo da sessão ou do PDF | contador textual e rótulo dinâmico de cada CTA | zero, um e múltiplos testes informam a mesma contagem |
+| alto impacto | “Não concluído” é um checkbox visualmente comum dentro de uma rotina crítica | `not-completed` usa input nativo ao lado do texto | estado binário pode passar despercebido e não orienta o preenchimento do motivo | toggle compacto com rótulo e estado ativo visível | teclado, toque e exigência de motivo preservados |
 | polimento | Testes não têm contexto funcional durante a escolha | nomes técnicos em lista plana | mais esforço para localizar o teste desejado | chip discreto de domínio funcional; sem alterar nomes ou ordem | leitura em desktop e mobile sem overflow |
 
 #### Sequência de adaptação
-1. Aplicar cartões de seleção e indicador visual sem mudar inputs, valores ou submissão.
-2. Atualizar contador e CTA no mesmo evento de `change`, incluindo foco visível e estados vazios.
-3. Verificar seleção por teclado, toque, desktop e mobile; preservar `prefers-reduced-motion`.
+1. Aplicar cartões de seleção e toggles sem mudar inputs, valores ou submissão.
+2. Atualizar contadores e CTAs no mesmo evento de `change`, incluindo foco visível e estados vazios.
+3. Verificar os quatro contextos por teclado, toque, desktop e mobile; preservar `prefers-reduced-motion`.
 
 #### Encaminhamento seletivo
 | Skill | Usar? | Evidência que justifica | Resultado esperado |
