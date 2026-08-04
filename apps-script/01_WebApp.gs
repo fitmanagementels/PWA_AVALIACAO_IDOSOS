@@ -1,6 +1,6 @@
 function doGet(e) {
   const action = (e.parameter && e.parameter.action) || 'health';
-  const handlers = { health: function() { return jsonOk_({ service: 'pwa-avaliacao-idosos' }); }, listPeople: listPeople, getPerson: getPerson, getAssessment: getAssessment, getHistory: getHistory, getCatalog: getCatalog };
+  const handlers = { health: function() { return jsonOk_({ service: 'pwa-avaliacao-idosos' }); }, listPeople: listPeople, getPerson: getPerson, getAssessment: getAssessment, getHistory: getHistory, getHistorySummary: getHistorySummary, getCatalog: getCatalog };
   return jsonOutput_(handlers[action] ? handlers[action](e.parameter || {}) : jsonError_('NOT_FOUND', 'Ação não encontrada'));
 }
 
