@@ -47,6 +47,12 @@ export function assessmentFromApi(assessment) {
   };
 }
 
+export function historySummaryFromApi(summary) {
+  let rows = [];
+  try { rows = JSON.parse(summary.resultadosResumoJson || '[]'); } catch (_) { rows = []; }
+  return { assessment: assessmentFromApi(summary), results: resultsFromApi(rows) };
+}
+
 export function resultsFromApi(rows) {
   const grouped = new Map();
   (rows || []).forEach((row) => {

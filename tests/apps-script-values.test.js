@@ -20,10 +20,12 @@ test('declares a compact history summary sheet for fast person lookups', () => {
   const source = fs.readFileSync('apps-script/00_Config.gs', 'utf8');
   assert.match(source, /HISTORY_SUMMARIES: 'HistoricoResumo'/);
   assert.match(source, /HistoricoResumo: \['resumoId', 'pessoaId', 'avaliacaoId'/);
+  assert.match(source, /'resultadosResumoJson'/);
 });
 
 test('provides a server-side backfill for history summaries', () => {
   const source = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
   assert.match(source, /function rebuildHistorySummaries\(\)/);
-  assert.match(source, /getRows_\(SHEETS\.ASSESSMENTS\)\.forEach\(updateHistorySummary_\)/);
+  assert.match(source, /const resultsByAssessment = getRows_\(SHEETS\.RESULTS\)/);
+  assert.match(source, /updateHistorySummary_\(assessment, resultsByAssessment\[assessment\.avaliacaoId\] \|\| \[\]\)/);
 });

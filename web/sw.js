@@ -1,4 +1,4 @@
-const CACHE = 'avaliacao-idosos-v8';
+const CACHE = 'avaliacao-idosos-v9';
 const ASSETS = ['./', './index.html', './config.js', './styles/app.css', './js/app.js', './js/api-client.js', './js/storage.js', './js/sync-status.js', './js/domain.js', './js/date-format.js', './js/history-cache.js', './js/assessment-domain.js', './js/result-presentation.js', './js/sync-model.js', './js/history-domain.js', './js/views/people.js', './js/views/assessment-editor.js', './js/views/history.js', './js/views/report-selection.js', './js/views/sync-panel.js', './js/views/selection-controls.js', './manifest.webmanifest', './icons/icon.svg'];
 self.addEventListener('install', (event) => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);

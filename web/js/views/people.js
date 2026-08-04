@@ -5,7 +5,7 @@ import { defaultReportTestIds } from './report-selection.js';
 import { formatDateBr } from '../date-format.js';
 import { filterHistory, readHistoryCache, writeHistoryCache } from '../history-cache.js';
 import { queueMutation } from '../storage.js';
-import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
+import { assessmentForCreate, assessmentFromApi, historySummaryFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
 import { bindSelectionSummary, selectionCardsMarkup } from './selection-controls.js';
 const key = 'avaliacao-idosos-people';
@@ -54,8 +54,8 @@ async function renderHistory(root, person) {
     root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
   }
   try {
-    const response = await request('getHistory', { pessoaId: person.id }, 'GET');
-    const records = response.data.map((item) => ({ assessment: assessmentFromApi(item.assessment), results: resultsFromApi(item.results) }));
+    const response = await request('getHistorySummary', { pessoaId: person.id }, 'GET');
+    const records = response.data.map(historySummaryFromApi);
     const assessments = historyTimeline(records, person);
     writeHistoryCache(localStorage, person.id, assessments);
     renderHistoryList(root, person, assessments, assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.');
