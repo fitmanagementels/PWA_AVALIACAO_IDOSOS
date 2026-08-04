@@ -1,5 +1,5 @@
-const CACHE = 'avaliacao-idosos-v2';
-const ASSETS = ['./', './index.html', './config.js', './styles/app.css', './js/app.js', './js/api-client.js', './js/storage.js', './js/domain.js', './js/assessment-domain.js', './js/history-domain.js', './js/views/people.js', './js/views/assessment-editor.js', './js/views/history.js', './manifest.webmanifest', './icons/icon.svg'];
+const CACHE = 'avaliacao-idosos-v3';
+const ASSETS = ['./', './index.html', './config.js', './styles/app.css', './js/app.js', './js/api-client.js', './js/storage.js', './js/domain.js', './js/assessment-domain.js', './js/result-presentation.js', './js/sync-model.js', './js/history-domain.js', './js/views/people.js', './js/views/assessment-editor.js', './js/views/history.js', './manifest.webmanifest', './icons/icon.svg'];
 self.addEventListener('install', (event) => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
   await cache.addAll(ASSETS);
