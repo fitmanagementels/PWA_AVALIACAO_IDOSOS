@@ -19,9 +19,8 @@ async function synchronize() {
   if (result.ok) await refreshPeople().catch(() => setStatus('sincronizado · atualização compartilhada pendente'));
   return result;
 }
-window.addEventListener('online', synchronize);
+window.addEventListener('online', () => setStatus('online · toque em Salvar para sincronizar'));
 window.addEventListener('offline', () => setStatus('offline · dados pendentes ficam neste aparelho'));
-document.addEventListener('sync-requested', synchronize);
 document.querySelector('[data-sync-now]').addEventListener('click', synchronize);
 window.syncNow = synchronize;
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');

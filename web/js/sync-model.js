@@ -73,6 +73,7 @@ function resultRows(assessment, result) {
     protocoloVersao: 1,
     motivoNaoConcluido: '',
     tentativas: (result.attempts || []).filter((attempt) => (attempt.side || 'unico') === side).map((attempt, index) => ({
+      tentativaId: `${assessment.id}:${result.testId}:${side}:${index + 1}`,
       ordem: index + 1,
       lado: side === 'unico' ? '' : side,
       valor: attempt.value,

@@ -1,7 +1,13 @@
 export function createMutationQueue(store) {
   return {
     async enqueue(mutation) { await store.put({ ...mutation, queuedAt: mutation.queuedAt || new Date().toISOString() }); },
-    async list() { return (await store.getAll()).sort((a, b) => a.queuedAt.localeCompare(b.queuedAt)); },
+    async enqueueAssessment({ assessmentId, action, payload }) {
+      await store.put({ id: `assessment:${assessmentId}`, assessmentId, action, payload });
+    },
+    async hasPendingAssessment(assessmentId) {
+      return (await store.getAll()).some((item) => item.assessmentId === assessmentId);
+    },
+    async list() { return (await store.getAll()).sort((a, b) => String(a.queuedAt || '').localeCompare(String(b.queuedAt || ''))); },
     async flush(send) {
       for (const mutation of await this.list()) {
         const response = await send(mutation);
@@ -41,5 +47,13 @@ export async function getDraft(id) { return (await indexedStore('drafts').getAll
 export async function queueMutation(action, payload) {
   if (!mutationQueue) throw new Error('Este navegador não oferece armazenamento local para sincronização.');
   await mutationQueue.enqueue({ id: crypto.randomUUID(), action, payload });
-  document.dispatchEvent(new Event('sync-requested'));
+}
+
+export async function enqueueAssessmentMutation(assessmentId, action, payload) {
+  if (!mutationQueue) throw new Error('Este navegador não oferece armazenamento local para sincronização.');
+  await mutationQueue.enqueueAssessment({ assessmentId, action, payload });
+}
+
+export async function hasPendingAssessmentMutation(assessmentId) {
+  return mutationQueue ? mutationQueue.hasPendingAssessment(assessmentId) : false;
 }
