@@ -1,6 +1,7 @@
 import { PROFESSIONALS, TESTS, buildAssessmentStart, whatsAppUrl } from '../domain.js';
 import { renderAssessmentEditor } from './assessment-editor.js';
 import { historyTimeline } from './history.js';
+import { defaultReportTestIds } from './report-selection.js';
 import { queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
@@ -61,9 +62,14 @@ async function renderAssessmentHistory(root, person, assessmentId) {
       localStorage.setItem(`assessment:${editable.id}`, JSON.stringify(editable));
       renderAssessmentEditor(root, editable, () => renderAssessmentHistory(root, person, assessment.id));
     };
-    root.querySelector('[data-report]').onclick = async () => {
-      const message = root.querySelector('.form-message'); message.textContent = 'Gerando relatório…';
-      try { const report = await request('generateReport', { avaliacaoId: assessment.id }); message.textContent = 'Relatório gerado. Abrindo arquivo…'; window.open(report.data.url, '_blank', 'noopener'); } catch (error) { message.textContent = error.message; }
+    root.querySelector('[data-report]').onclick = () => {
+      const selected = defaultReportTestIds(results);
+      const target = root.querySelector('.action-grid');
+      target.innerHTML = `<form class="form-card report-selection"><strong>Testes no relatório</strong>${assessment.testIds.map((id) => `<label class="check-option"><input type="checkbox" name="includedTestIds" value="${id}"${selected.includes(id) ? ' checked' : ''}><span>${testName(id)}</span></label>`).join('')}<button>Gerar relatório PDF</button></form>`;
+      target.querySelector('form').onsubmit = async (event) => {
+        event.preventDefault(); const message = root.querySelector('.form-message'); message.textContent = 'Gerando relatório…';
+        try { const report = await request('generateReport', { avaliacaoId: assessment.id, includedTestIds: new FormData(event.currentTarget).getAll('includedTestIds') }); message.textContent = 'Relatório gerado. Abrindo arquivo…'; window.open(report.data.url, '_blank', 'noopener'); } catch (error) { message.textContent = error.message; }
+      };
     };
   } catch (error) {
     root.querySelector('.screen-title p:not(.eyebrow)').textContent = `Não foi possível carregar esta avaliação: ${error.message}`;

@@ -1,13 +1,17 @@
 function generateReport(payload) {
+  if (!Array.isArray(payload.includedTestIds) || !payload.includedTestIds.length) return jsonError_('VALIDATION_ERROR', 'Selecione ao menos um teste para o relatório');
   const loaded = getAssessment(payload);
   if (!loaded.ok) return loaded;
   const person = getRows_(SHEETS.PEOPLE).find(function(row) { return row.pessoaId === loaded.data.assessment.pessoaId; });
-  const model = buildReportModel_({ person: { name: person.nomeCompleto }, assessment: loaded.data.assessment, results: loaded.data.results });
+  const included = payload.includedTestIds;
+  const model = buildReportModel_({ person: { name: person.nomeCompleto }, assessment: loaded.data.assessment, results: loaded.data.results.filter(function(result) { return included.indexOf(result.testeId) !== -1; }) });
   const title = 'Relatório - ' + person.nomeCompleto + ' - ' + loaded.data.assessment.data;
   const document = DocumentApp.create(title);
   const body = document.getBody();
   body.appendParagraph('RELATÓRIO DE AVALIAÇÃO FUNCIONAL').setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  body.appendParagraph(model.summary.personName + ' · ' + model.summary.date);
+  body.appendParagraph(model.summary.personName + ' · Avaliação: ' + model.summary.date);
+  body.appendParagraph('Atualizado em: ' + (loaded.data.assessment.ultimaAtualizacao || '—'));
+  body.appendParagraph('Testes incluídos: ' + included.join(', '));
   body.appendParagraph('Resumo da avaliação').setHeading(DocumentApp.ParagraphHeading.HEADING2);
   model.summary.domains.forEach(function(result) { body.appendParagraph(result.testId + ': ' + (result.value || 'Não concluído') + (result.classification ? ' · ' + result.classification : '')); });
   if (model.summary.studentObservations) { body.appendParagraph('Observações do profissional sobre o aluno').setHeading(DocumentApp.ParagraphHeading.HEADING2); body.appendParagraph(model.summary.studentObservations); }
