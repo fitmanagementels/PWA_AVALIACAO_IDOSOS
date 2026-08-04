@@ -322,7 +322,7 @@ git commit -m "style: polish premium selection controls"
 ```js
 test('caches the premium selection module in a new application shell', () => {
   const source = fs.readFileSync('web/sw.js', 'utf8');
-  assert.match(source, /const CACHE = 'avaliacao-idosos-v7';/);
+  assert.match(source, /const CACHE = 'avaliacao-idosos-v8';/);
   assert.match(source, /views\/selection-controls\.js/);
 });
 ```
@@ -335,7 +335,7 @@ Expected: FAIL because the cache is still v6 and does not cache the helper.
 
 - [ ] **Step 3: Write minimal implementation**
 
-Set `const CACHE = 'avaliacao-idosos-v7';`, add `./js/views/selection-controls.js` to `ASSETS`, and update `brand-visual-contract.md` to record that `brand-criar-navegacao-interacao` and `brand-aplicar-marca-e-acabamento` were executed for this addendum. Record desktop/mobile manual validation as pending until verified after deploy.
+Set `const CACHE = 'avaliacao-idosos-v8';`, add `./js/views/selection-controls.js` to `ASSETS`, and update `brand-visual-contract.md` to record that `brand-criar-navegacao-interacao` and `brand-aplicar-marca-e-acabamento` were executed for this addendum. Record desktop/mobile manual validation as pending until verified after deploy.
 
 - [ ] **Step 4: Run complete verification**
 
@@ -357,7 +357,7 @@ git push origin master
 curl -sSL https://fitmanagementels.github.io/PWA_AVALIACAO_IDOSOS/sw.js | head -3
 ```
 
-Expected: push accepted and the published service worker reports `avaliacao-idosos-v7` with `selection-controls.js` in `ASSETS`.
+Expected: push accepted and the published service worker reports `avaliacao-idosos-v8` with `selection-controls.js` in `ASSETS`.
 
 ## Self-review
 

@@ -7,6 +7,7 @@ import { filterHistory, readHistoryCache, writeHistoryCache } from '../history-c
 import { queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
+import { bindSelectionSummary, selectionCardsMarkup } from './selection-controls.js';
 const key = 'avaliacao-idosos-people';
 const testName = (id) => TESTS.find(([testId]) => testId === id)?.[1] || id;
 const read = () => JSON.parse(localStorage.getItem(key) || '[]');
@@ -91,8 +92,10 @@ async function renderAssessmentHistory(root, person, assessmentId) {
     root.querySelector('[data-report]').onclick = () => {
       const selected = defaultReportTestIds(results);
       const target = root.querySelector('.action-grid');
-      target.innerHTML = `<form class="form-card report-selection"><strong>Testes no relatório</strong>${assessment.testIds.map((id) => `<label class="check-option"><input type="checkbox" name="includedTestIds" value="${id}"${selected.includes(id) ? ' checked' : ''}><span>${testName(id)}</span></label>`).join('')}<button>Gerar relatório PDF</button></form>`;
-      target.querySelector('form').onsubmit = async (event) => {
+      target.innerHTML = `<form class="form-card report-selection"><strong>Testes no relatório</strong><p class="selection-summary" data-selection-summary="report"></p><div class="selection-list">${selectionCardsMarkup({ name: 'includedTestIds', items: assessment.testIds.map((id) => [id, testName(id)]), selectedIds: selected })}</div><button data-selection-action="report">Gerar relatório PDF</button></form>`;
+      const reportForm = target.querySelector('form');
+      bindSelectionSummary(reportForm, { inputName: 'includedTestIds', summarySelector: '[data-selection-summary="report"]', buttonSelector: '[data-selection-action="report"]', idleLabel: 'Gerar relatório PDF' });
+      reportForm.onsubmit = async (event) => {
         event.preventDefault(); const message = root.querySelector('.form-message'); message.textContent = 'Gerando relatório…';
         try { const report = await request('generateReport', { avaliacaoId: assessment.id, includedTestIds: new FormData(event.currentTarget).getAll('includedTestIds') }); message.textContent = 'Relatório gerado. Abrindo arquivo…'; window.open(report.data.url, '_blank', 'noopener'); } catch (error) { message.textContent = error.message; }
       };
@@ -102,6 +105,9 @@ async function renderAssessmentHistory(root, person, assessmentId) {
   }
 }
 function renderStart(root, person) {
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVA AVALIAÇÃO</p><h1>${person.name}</h1><p>Escolha os testes desta sessão.</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Data<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label><label>Profissional<select name="professionalName" required><option value="">Selecione</option>${PROFESSIONALS.map((name) => `<option>${name}</option>`).join('')}</select></label><fieldset><legend>Testes</legend>${TESTS.map(([id, name]) => `<label class="check-option"><input type="checkbox" name="testIds" value="${id}"><span>${name}</span></label>`).join('')}</fieldset><button>Iniciar avaliação</button><p class="form-message"></p></form>`;
-  root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id); root.querySelector('form').onsubmit = async (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); try { const start = buildAssessmentStart({ personId: person.id, professionalName: data.get('professionalName'), testIds: data.getAll('testIds') }); const assessment = { id: crypto.randomUUID(), personId: person.id, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, ...start, date: data.get('date'), status: 'rascunho', results: [] }; localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(assessment)); await queueMutation('createAssessment', assessmentForCreate(assessment)); renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id)); } catch (error) { root.querySelector('.form-message').textContent = error.message; } };
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVA AVALIAÇÃO</p><h1>${person.name}</h1><p>Escolha os testes desta sessão.</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Data<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label><label>Profissional<select name="professionalName" required><option value="">Selecione</option>${PROFESSIONALS.map((name) => `<option>${name}</option>`).join('')}</select></label><fieldset class="selection-group"><legend>Testes</legend><p class="selection-summary" data-selection-summary="start"></p><div class="selection-list">${selectionCardsMarkup({ name: 'testIds', items: TESTS })}</div></fieldset><button data-selection-action="start">Iniciar avaliação</button><p class="form-message"></p></form>`;
+  root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+  const form = root.querySelector('form');
+  bindSelectionSummary(form, { inputName: 'testIds', summarySelector: '[data-selection-summary="start"]', buttonSelector: '[data-selection-action="start"]', idleLabel: 'Iniciar avaliação' });
+  form.onsubmit = async (event) => { event.preventDefault(); const data = new FormData(event.currentTarget); try { const start = buildAssessmentStart({ personId: person.id, professionalName: data.get('professionalName'), testIds: data.getAll('testIds') }); const assessment = { id: crypto.randomUUID(), personId: person.id, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, ...start, date: data.get('date'), status: 'rascunho', results: [] }; localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(assessment)); await queueMutation('createAssessment', assessmentForCreate(assessment)); renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id)); } catch (error) { root.querySelector('.form-message').textContent = error.message; } };
 }

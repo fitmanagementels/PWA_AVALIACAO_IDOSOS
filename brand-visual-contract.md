@@ -28,7 +28,7 @@
 | alto impacto | Checkbox nativo aparece isolado e os nomes ficam distantes no desktop | captura enviada e `check-option` reutilizada no início, adição e PDF | toque, associação visual e leitura por varredura ficam lentos em todos os locais | transformar cada `label` em cartão selecionável, com controle customizado e área inteira acionável | clicar em texto/cartão alterna seleção e mantém `FormData` |
 | alto impacto | Não existe feedback resumido da seleção antes das ações primárias | `fieldset`, adição e relatório não expõem contagem | profissional não confirma rapidamente o escopo da sessão ou do PDF | contador textual e rótulo dinâmico de cada CTA | zero, um e múltiplos testes informam a mesma contagem |
 | alto impacto | “Não concluído” é um checkbox visualmente comum dentro de uma rotina crítica | `not-completed` usa input nativo ao lado do texto | estado binário pode passar despercebido e não orienta o preenchimento do motivo | toggle compacto com rótulo e estado ativo visível | teclado, toque e exigência de motivo preservados |
-| polimento | Testes não têm contexto funcional durante a escolha | nomes técnicos em lista plana | mais esforço para localizar o teste desejado | chip discreto de domínio funcional; sem alterar nomes ou ordem | leitura em desktop e mobile sem overflow |
+| polimento | Nomes técnicos podem quebrar em duas linhas em telas estreitas | nomes atuais permanecem sem classificação por decisão de produto | leitura pode perder ritmo em telas pequenas | preservar o nome e usar cartões com altura mínima e quebra natural | leitura em desktop e mobile sem overflow |
 
 #### Sequência de adaptação
 1. Aplicar cartões de seleção e toggles sem mudar inputs, valores ou submissão.
@@ -87,6 +87,13 @@
 | Salvar avaliação | “Salvar e sincronizar” | “Salvando localmente…” | “Rascunho salvo e sincronizado” | não se aplica | “Rascunho protegido neste aparelho. [causa]” | somente enquanto o próprio envio estiver ativo |
 | Lista de pessoas | conteúdo local ou compartilhado | esqueleto breve na carga inicial | lista atualizada | instrução para cadastrar a primeira pessoa | aviso de dados locais e ação de sincronizar | não se aplica |
 
+### Aditivo — controles de seleção premium
+
+- Trabalho recorrente e fluxo curto: escolher testes, adicionar testes e definir o conteúdo do PDF permanecem na própria tela; cada seleção atualiza sua contagem sem abrir overlay.
+- Ação primária por contexto: iniciar avaliação, adicionar testes ou gerar PDF informa a contagem atual sem competir com outra ação.
+- Mobile — cartões em coluna única (mínimo 52 px) e toggle “Não concluído” com alvo de 44 px; sem rolagem horizontal.
+- Skills executadas neste aditivo: `brand-criar-navegacao-interacao` definiu os estados de seleção e contagem; `brand-aplicar-marca-e-acabamento` aplicou cartões/toggle, foco lime e motion reduzido.
+
 ### Motion e acessibilidade
 - Transições (`transform`/`opacity`, 180–250 ms): entrada e troca de estado da faixa de sincronização; sem animação em campos ou registros clínicos.
 - Comportamento com `prefers-reduced-motion`: mudança instantânea de estado, preservando ícone, texto e ação.
@@ -121,3 +128,4 @@
 - Motion com `transform`/`opacity`: somente faixa e painel de sincronização.
 - `prefers-reduced-motion`: transições e animações não essenciais são removidas.
 - Pendências restantes: validação manual em navegador real antes da publicação.
+- Controles de seleção — desktop e mobile: verificação automatizada cobre cartões, toggle, contagem e semântica dos nomes; inspeção visual publicada será confirmada após o cache v8 entrar no ar.
