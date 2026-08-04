@@ -11,3 +11,13 @@ test('uses XSTEAM dark surface tokens and reserves lime for action and focus', (
   assert.match(css, /#E2FF42/);
   assert.match(css, /prefers-reduced-motion/);
 });
+
+test('styles premium selection cards and binary toggles accessibly', () => {
+  const css = fs.readFileSync('web/styles/app.css', 'utf8');
+  assert.match(css, /\.selection-card/);
+  assert.match(css, /\.selection-card:has\(input:checked\)/);
+  assert.match(css, /\.selection-toggle/);
+  assert.match(css, /\.selection-input:focus-visible/);
+  assert.match(css, /min-height:\s*52px/);
+  assert.match(css, /@media \(max-width: 480px\)/);
+});
