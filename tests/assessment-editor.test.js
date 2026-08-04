@@ -15,3 +15,11 @@ test('offers adding tests and manual completion', () => {
   assert.match(source, /data-action="complete"/);
   assert.match(source, /assessmentReadiness/);
 });
+
+test('uses premium cards for added tests and toggles for non-completed tests', () => {
+  assert.match(source, /selectionCardsMarkup\(\{ name: 'additionalTestIds'/);
+  assert.match(source, /data-selection-summary="additional"/);
+  assert.match(source, /class="selection-toggle"/);
+  assert.match(source, /notCompletedToggle\('sppb-not-completed', inputs\)/);
+  assert.match(source, /notCompletedToggle\(`\$\{id\}-not-completed`, inputs\)/);
+});
