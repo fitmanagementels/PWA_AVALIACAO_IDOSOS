@@ -6,6 +6,7 @@ import { queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
 const key = 'avaliacao-idosos-people';
+const testName = (id) => TESTS.find(([testId]) => testId === id)?.[1] || id;
 const read = () => JSON.parse(localStorage.getItem(key) || '[]');
 const write = (items) => localStorage.setItem(key, JSON.stringify(items));
 export function replacePeopleFromApi(records) { write(records.map(personFromApi)); }
