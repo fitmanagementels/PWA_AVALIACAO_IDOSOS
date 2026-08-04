@@ -6,6 +6,7 @@ export function historyTimeline(records, person) {
     date: assessment.date,
     professionalName: assessment.professionalName,
     status: assessment.status,
+    testIds: assessment.testIds || [],
     colors: sessionColorCounts({ selectedTestIds: assessment.testIds || [], results: results || [], person, assessmentDate: assessment.date })
   }));
 }

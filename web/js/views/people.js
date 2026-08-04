@@ -3,6 +3,7 @@ import { renderAssessmentEditor } from './assessment-editor.js';
 import { historyTimeline } from './history.js';
 import { defaultReportTestIds } from './report-selection.js';
 import { formatDateBr } from '../date-format.js';
+import { filterHistory, readHistoryCache, writeHistoryCache } from '../history-cache.js';
 import { queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
@@ -13,9 +14,17 @@ const write = (items) => localStorage.setItem(key, JSON.stringify(items));
 export function replacePeopleFromApi(records) { write(records.map(personFromApi)); }
 export function renderPeople(root) {
   const people = read();
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><section class="list">${people.length ? people.map((p) => `<button class="person-card" data-id="${p.id}"><strong>${p.name}</strong><span>${formatDateBr(p.birthDate)} · ${p.sex}</span></button>`).join('') : '<article class="empty-state"><h2>Nenhuma pessoa cadastrada</h2><p>Cadastre o primeiro aluno para iniciar uma avaliação.</p></article>'}</section>`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><label class="search-field">Buscar aluno<input type="search" data-person-search placeholder="Digite um nome"></label><section class="list" data-person-list></section>`;
+  const personList = root.querySelector('[data-person-list]');
+  const renderList = (query = '') => {
+    const normalized = query.trim().toLocaleLowerCase('pt-BR');
+    const visible = people.filter((person) => person.name.toLocaleLowerCase('pt-BR').includes(normalized));
+    personList.innerHTML = visible.length ? visible.map((p) => `<button class="person-card" data-id="${p.id}"><strong>${p.name}</strong><span>${formatDateBr(p.birthDate)} · ${p.sex}</span></button>`).join('') : '<article class="empty-state"><p>Nenhum aluno encontrado.</p></article>';
+    personList.querySelectorAll('[data-id]').forEach((button) => button.onclick = () => renderPerson(root, button.dataset.id));
+  };
+  renderList();
+  root.querySelector('[data-person-search]').oninput = (event) => renderList(event.target.value);
   root.querySelector('[data-new]').onclick = () => renderPersonForm(root);
-  root.querySelectorAll('[data-id]').forEach((button) => button.onclick = () => renderPerson(root, button.dataset.id));
 }
 function renderPersonForm(root) {
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVO CADASTRO</p><h1>Pessoa avaliada</h1></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Nome completo<input name="name" required></label><label>Data de nascimento<input name="birthDate" type="date" required></label><label>Sexo<select name="sex" required><option value="">Selecione</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option></select></label><label>WhatsApp (opcional)<input name="whatsapp" inputmode="tel"></label><button>Salvar pessoa</button></form>`;
@@ -37,18 +46,33 @@ function resumeLatestDraft(root, person) {
   renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id));
 }
 async function renderHistory(root, person) {
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>Carregando avaliações salvas na planilha…</p></div><button class="secondary" data-back>Voltar</button></section>`;
-  root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+  const cached = readHistoryCache(localStorage, person.id);
+  if (cached.length) renderHistoryList(root, person, cached, 'Histórico deste aparelho · atualizando dados compartilhados…');
+  else {
+    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>Carregando avaliações salvas na planilha…</p></div><button class="secondary" data-back>Voltar</button></section>`;
+    root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+  }
   try {
     const response = await request('getHistory', { pessoaId: person.id }, 'GET');
     const records = response.data.map((item) => ({ assessment: assessmentFromApi(item.assessment), results: resultsFromApi(item.results) }));
     const assessments = historyTimeline(records, person);
-    root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.'}</p></div><button class="secondary" data-back>Voltar</button></section>${assessments.length ? `<section class="list">${assessments.map((assessment) => `<button class="person-card" data-assessment-id="${assessment.assessmentId}"><strong>${formatDateBr(assessment.date)}</strong><span>${assessment.professionalName} · ${assessment.status} · ${assessment.colors.green} verdes · ${assessment.colors.yellow} amarelos · ${assessment.colors.gray} cinzas</span></button>`).join('')}</section>` : '<article class="empty-state"><h2>Sem avaliações salvas</h2><p>Os rascunhos deste aparelho podem ser retomados na tela anterior.</p></article>'}`;
-    root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
-    root.querySelectorAll('[data-assessment-id]').forEach((button) => button.onclick = () => renderAssessmentHistory(root, person, button.dataset.assessmentId));
+    writeHistoryCache(localStorage, person.id, assessments);
+    renderHistoryList(root, person, assessments, assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.');
   } catch (error) {
-    root.querySelector('.screen-title p:not(.eyebrow)').textContent = `Não foi possível carregar o histórico: ${error.message}`;
+    root.querySelector('.screen-title p:not(.eyebrow)').textContent = cached.length ? 'Mostrando histórico salvo neste aparelho. A atualização compartilhada está indisponível.' : `Não foi possível carregar o histórico: ${error.message}`;
   }
+}
+function renderHistoryList(root, person, assessments, subtitle) {
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${subtitle}</p></div><button class="secondary" data-back>Voltar</button></section><label class="search-field">Filtrar por teste<select data-history-test><option value="">Todos os testes</option>${TESTS.map(([id, name]) => `<option value="${id}">${name}</option>`).join('')}</select></label><section class="list" data-history-list></section>`;
+  const list = root.querySelector('[data-history-list]');
+  const renderList = (testId = '') => {
+    const visible = filterHistory(assessments, { testId });
+    list.innerHTML = visible.length ? visible.map((assessment) => `<button class="person-card" data-assessment-id="${assessment.assessmentId}"><strong>${formatDateBr(assessment.date)}</strong><span>${assessment.professionalName} · ${assessment.status} · ${assessment.colors.green} verdes · ${assessment.colors.yellow} amarelos · ${assessment.colors.gray} cinzas</span></button>`).join('') : '<article class="empty-state"><p>Nenhuma avaliação para este filtro.</p></article>';
+    list.querySelectorAll('[data-assessment-id]').forEach((button) => button.onclick = () => renderAssessmentHistory(root, person, button.dataset.assessmentId));
+  };
+  root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+  root.querySelector('[data-history-test]').onchange = (event) => renderList(event.target.value);
+  renderList();
 }
 async function renderAssessmentHistory(root, person, assessmentId) {
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${person.name}</h1><p>Carregando resultados…</p></div><button class="secondary" data-back>Voltar</button></section>`;
