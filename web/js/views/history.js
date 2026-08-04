@@ -1,11 +1,11 @@
-import { compareComparableResults } from '../history-domain.js';
+import { sessionColorCounts } from '../result-presentation.js';
 
-export function historySummary(assessments) {
-  return assessments.sort((a, b) => String(b.date).localeCompare(String(a.date))).map((assessment, index, all) => ({
-    ...assessment,
-    comparisons: (assessment.results || []).map((result) => {
-      const prior = all.slice(index + 1).flatMap((item) => item.results || []).find((candidate) => candidate.testId === result.testId && candidate.side === result.side);
-      return { result, comparison: prior ? compareComparableResults(prior, result) : { comparable: false, delta: null } };
-    })
+export function historyTimeline(records, person) {
+  return [...records].sort((a, b) => String(b.assessment.date).localeCompare(String(a.assessment.date))).map(({ assessment, results }) => ({
+    assessmentId: assessment.id,
+    date: assessment.date,
+    professionalName: assessment.professionalName,
+    status: assessment.status,
+    colors: sessionColorCounts({ selectedTestIds: assessment.testIds || [], results: results || [], person, assessmentDate: assessment.date })
   }));
 }

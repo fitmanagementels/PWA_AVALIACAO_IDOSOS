@@ -1,10 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { compareComparableResults } from '../web/js/history-domain.js';
+import { historyTimeline } from '../web/js/views/history.js';
 
-test('compares only identical test, side, unit and protocol version', () => {
-  const previous = { testId: 'step-2min', side: null, unit: 'contagem', protocolVersion: 1, value: 80 };
-  const current = { testId: 'step-2min', side: null, unit: 'contagem', protocolVersion: 1, value: 86 };
-  assert.deepEqual(compareComparableResults(previous, current), { comparable: true, delta: 6 });
-  assert.equal(compareComparableResults({ ...previous, testId: 'back-scratch', side: 'esquerdo', unit: 'cm' }, { ...current, testId: 'back-scratch', side: 'direito', unit: 'cm' }).comparable, false);
+test('creates chronological history items without comparison deltas', () => {
+  const items = historyTimeline([{ assessment: { id: 'a1', date: '2026-08-01', professionalName: 'Elohim', status: 'concluida' }, results: [] }], {});
+  assert.deepEqual(items, [{ assessmentId: 'a1', date: '2026-08-01', professionalName: 'Elohim', status: 'concluida', colors: { green: 0, yellow: 0, gray: 0, pending: 0 } }]);
 });

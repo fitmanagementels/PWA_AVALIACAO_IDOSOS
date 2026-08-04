@@ -47,6 +47,18 @@ export function assessmentFromApi(assessment) {
   };
 }
 
+export function resultsFromApi(rows) {
+  const grouped = new Map();
+  (rows || []).forEach((row) => {
+    const item = grouped.get(row.testeId) || { testId: row.testeId, status: row.status, unit: row.unidade || '', attempts: [], officialBySide: {}, reason: row.motivoNaoConcluido || '' };
+    item.status = row.status;
+    if (row.status === 'concluido') item.officialBySide[row.lado || 'unico'] = measurementValue(row.valorOficial);
+    if (row.motivoNaoConcluido) item.reason = row.motivoNaoConcluido;
+    grouped.set(row.testeId, item);
+  });
+  return [...grouped.values()];
+}
+
 function resultRows(assessment, result) {
   if (result.status === 'naoConcluido') {
     return [{
