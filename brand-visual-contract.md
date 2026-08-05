@@ -145,3 +145,63 @@
 - `prefers-reduced-motion`: transições e animações não essenciais são removidas.
 - Pendências restantes: validação manual em navegador real antes da publicação.
 - Controles de seleção — desktop e mobile: verificação automatizada cobre cartões, toggle, contagem e semântica dos nomes; inspeção visual publicada será confirmada após o cache v8 entrar no ar.
+
+## Aditivo — central de atendimentos XSTEAM (05/08/2026)
+
+### Contexto e premissas
+
+- Requisitos considerados: a abertura do PWA deve ser uma central de atendimentos; cadastro, rascunho, avaliação e consulta permanecem rotinas clínicas; a referência visual vem das três direções fornecidas pelo Stitch.
+- Premissas: somente estados que já existam localmente, no cache ou no backend podem ser exibidos; não criar score, prontidão, alerta clínico, agenda, protocolo ou métrica agregada sem dados e regra aprovados.
+- Tarefa e decisão principais: encontrar ou criar a pessoa certa e decidir entre continuar um rascunho real, iniciar nova avaliação ou consultar seu histórico.
+
+### Perfil
+
+- Tipo: PWA operacional.
+- Público e frequência: profissional de avaliação funcional, em atendimentos recorrentes, predominantemente em celular e ocasionalmente em desktop.
+- Justificativa: registrar ou concluir uma avaliação é a atividade dominante; overview só apoia o próximo atendimento e não pode competir com ele.
+
+### Tema
+
+- Escolha: dark.
+- Superfícies e justificativa: base próxima de preto-esverdeado, card para lista e formulário, ativo para seleção/rascunho e overlay para menus e sheets. O lime `#E2FF42` fica restrito à marca, CTA clínica, foco e seleção ativa; o acabamento usa contraste e borda, não sombras pesadas ou gradientes.
+
+### Densidade
+
+- Escolha: confortável.
+- Justificativa: a rotina envolve leitura e toque durante atendimento; linhas e cards preservam escaneabilidade sem os vazios excessivos de uma landing page. Desktop pode comprimir o diretório para tabela confortável quando houver muitos registros.
+
+### Hierarquia
+
+1. Continuar atendimento protegido — rascunho local, se existir.
+2. Encontrar ou cadastrar pessoa — busca e CTA “Nova pessoa”.
+3. Escolher a próxima ação na pessoa — nova avaliação, retomar rascunho ou histórico.
+4. Configurar a sessão — data e profissional.
+5. Selecionar testes e iniciar a avaliação.
+6. Consultar cronologia e resultados salvos.
+
+### Zonas
+
+| Zona | Objetivo | Conteúdo | Prioridade | Componente |
+|---|---|---|---|---|
+| Barra de produto | Identificar XSTEAM e informar sincronização | logo, nome do produto e estado de fila | alta | barra compacta persistente |
+| Continuar atendimento | Retomar somente trabalho real pendente | pessoa, data e ação de retomar rascunho local | alta quando houver rascunho | card focal operacional |
+| Busca e cadastro | Encontrar ou criar pessoa | busca, filtro futuro e “Nova pessoa” | alta | zona de ação curta |
+| Diretório | Escolher pessoa para atendimento | nome, dados mínimos e estado conhecido | alta | cards no mobile, tabela no desktop |
+| Sessão | Configurar avaliação da pessoa selecionada | data e profissional | alta | bloco linear de formulário |
+| Testes | Selecionar o escopo da sessão | cartões de seleção múltipla e contagem | alta | lista técnica + CTA fixo no fluxo |
+| Histórico | Recuperar avaliações existentes | filtro por teste, mês/data, status, profissional e testes realizados | média | timeline no mobile e lista/tabela no desktop |
+
+### Componentes
+
+- Componente focal: card “Continuar atendimento” quando há rascunho; na ausência dele, a busca e o CTA de nova pessoa ocupam essa posição sem criar um vazio artificial.
+- Fluxos lineares: pessoa → sessão → testes → avaliação; pessoa → histórico → detalhe. Não converter em seleção genérica de “protocolos”, pois o produto atual trabalha com múltiplos testes.
+- Blocos de overview/bento: não aplicável na operação atual; somente um resumo de rascunhos e sincronização, baseado em dados reais, pode coexistir com o diretório.
+- Dados densos — tabela ou cards e por quê: cards de pessoa e timeline no celular pela ação por toque; tabela confortável no desktop para comparar nome, idade/dados disponíveis, última avaliação conhecida e estado real.
+- Estados vazios, carregamento, erro e sucesso: vazio convida a cadastrar a primeira pessoa; carregamento preserva cache e usa skeleton localizado; erro mantém registros locais e mostra recuperação; sucesso confirma a fila/sincronização sem interromper o fluxo.
+
+### Responsividade
+
+- Mobile em coluna única: barra, rascunho, busca/cadastro, diretório e status persistente; avaliação usa CTA inferior apenas depois de haver testes selecionados.
+- Ordem das zonas no mobile: continuar atendimento → busca/cadastro → diretório → ações da pessoa → sessão → testes → histórico.
+- Adaptação de dados densos: diretório vira cards com dados resumidos; histórico usa timeline agrupada por mês; filtros abrem em bottom sheet.
+- Expansão para telas maiores: diretório pode usar tabela e busca/CTA na mesma linha; avaliação conserva fluxo linear em duas colunas apenas para sessão e lista de testes; histórico pode ter lista à esquerda e detalhe contextual à direita, sem criar painel analítico de métricas inexistentes.
