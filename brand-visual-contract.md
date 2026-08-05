@@ -206,3 +206,38 @@
 - Ordem das zonas no mobile: continuar atendimento → busca/cadastro → diretório → ações da pessoa → sessão → testes → histórico.
 - Adaptação de dados densos: diretório vira cards com dados resumidos; histórico usa timeline agrupada por mês; filtros abrem em bottom sheet.
 - Expansão para telas maiores: diretório pode usar tabela e busca/CTA na mesma linha; avaliação conserva fluxo linear em duas colunas apenas para sessão e lista de testes; histórico pode ter lista à esquerda e detalhe contextual à direita, sem criar painel analítico de métricas inexistentes.
+
+## Marca e acabamento — central de atendimentos (05/08/2026)
+
+- Voz visual aplicada: operacional dark premium, com a central orientada ao próximo atendimento e sem elementos de dashboard clínico inexistentes.
+- Tema final e proporção dark (mínimo 60%): integralmente dark; base, diretório, interação e menus utilizam as quatro superfícies já existentes.
+- Uso permitido de `#E2FF42` — marca/foco/ação/métrica: CTA primário, foco de teclado, cartão de teste selecionado e indicador pontual de navegação; não é usado como preenchimento recorrente de listas ou histórico.
+- Uso de geometria e efeitos: logo original preservado; elevação preta discreta apenas no diretório e CTA fixo válido, sem novos gradientes ou ornamentos.
+
+### Tokens aplicados
+
+| Categoria | Token | Valor | Uso na central |
+|---|---|---|---|
+| Superfície | `--surface-base` | `#07110f` | página e fundo operacional |
+| Superfície | `--surface-card` | `#101d1a` | diretório, entradas da timeline e formulário |
+| Superfície | `--surface-active` | `#172a25` | hover e seleção persistente |
+| Superfície | `--surface-overlay` | `#0d1815` | cabeçalho de dados e ação inválida |
+| Borda | `--border` | `#294039` | separação de linhas e campos |
+| Ação/foco | `--focus` | `#E2FF42` | CTA, foco e seleção ativa |
+
+### Quatro superfícies
+
+| Nível | Token | Luminância/borda | Conteúdo |
+|---|---|---|---|
+| base | `--surface-base` | camada mais escura | página e respiro entre zonas |
+| card | `--surface-card` | borda `--border` | diretório, formulário e timeline |
+| ativo | `--surface-active` | luminância intermediária | hover de pessoa e cartões selecionados |
+| overlay | `--surface-overlay` | borda sutil e blur somente na faixa existente | cabeçalho de diretório, menus e estado desabilitado |
+
+### Verificação final
+
+- Desktop — contraste, foco, dados e estados: diretório ganha colunas “Pessoa” e “Próximo passo” a partir de 760 px; foco de pessoa e item da timeline usa outline lime visível.
+- Mobile — ordem, alcance, legibilidade, overflow e overlays: diretório mantém uma coluna, ações possuem mínimo de 48 px e o CTA de avaliação só fixa acima da faixa de sincronização após haver teste selecionado.
+- Motion com `transform`/`opacity`: nenhuma animação nova foi adicionada à central; transições existentes continuam limitadas a propriedades seguras.
+- `prefers-reduced-motion`: regra global existente remove transições e animações não essenciais.
+- Pendências restantes: conferir em navegador real com os registros habituais após o cache `v14` ser publicado.

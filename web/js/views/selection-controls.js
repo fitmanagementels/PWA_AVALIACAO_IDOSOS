@@ -17,13 +17,26 @@ export function selectionSummary(count, action) {
   };
 }
 
-export function bindSelectionSummary(form, { inputName, summarySelector, buttonSelector, idleLabel, selectedLabel = idleLabel }) {
+export function selectionActionState(count, action) {
+  const copy = selectionSummary(count, action);
+  return {
+    selectedCount: count,
+    isReady: count > 0,
+    label: count ? copy.action : 'Selecione ao menos um teste',
+  };
+}
+
+export function bindSelectionSummary(form, { inputName, summarySelector, buttonSelector, idleLabel, selectedLabel = idleLabel, requireSelection = false }) {
   const update = () => {
     const inputs = [...form.querySelectorAll(`input[name="${inputName}"]`)];
     const count = inputs.filter((input) => input.checked).length;
     const copy = selectionSummary(count, count ? selectedLabel : idleLabel);
+    const state = selectionActionState(count, selectedLabel);
+    const button = form.querySelector(buttonSelector);
     form.querySelector(summarySelector).textContent = copy.count;
-    form.querySelector(buttonSelector).textContent = copy.action;
+    button.textContent = state.isReady ? state.label : (requireSelection ? state.label : idleLabel);
+    button.disabled = requireSelection && !state.isReady;
+    button.dataset.selectionReady = String(state.isReady);
     inputs.forEach((input) => input.closest('.selection-card')?.classList.toggle('is-selected', input.checked));
   };
   form.addEventListener('change', update);

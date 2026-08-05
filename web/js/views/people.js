@@ -1,6 +1,7 @@
 import { PROFESSIONALS, TESTS, buildAssessmentStart, whatsAppUrl } from '../domain.js';
 import { renderAssessmentEditor } from './assessment-editor.js';
-import { historyTimeline } from './history.js';
+import { groupHistoryByMonth, historyTimeline } from './history.js';
+import { buildAttendanceItems } from './attendance-center.js';
 import { defaultReportTestIds } from './report-selection.js';
 import { formatDateBr } from '../date-format.js';
 import { filterHistory, readHistoryCache, writeHistoryCache } from '../history-cache.js';
@@ -18,17 +19,39 @@ export function replacePeopleFromApi(records) { write(records.map(personFromApi)
 export function renderPeople(root) {
   startNavigation('people');
   const people = read();
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><label class="search-field">Buscar aluno<input type="search" data-person-search placeholder="Digite um nome"></label><section class="list" data-person-list></section>`;
+  const assessments = localAssessmentRecords();
+  const historiesByPerson = Object.fromEntries(people.map((person) => [person.id, readHistoryCache(localStorage, person.id)]));
+  const attendance = buildAttendanceItems(people, assessments, historiesByPerson);
+  root.innerHTML = `<section class="attendance-hero"><p class="eyebrow">CENTRAL DE ATENDIMENTOS</p><div class="attendance-hero__heading"><div><h1>Atendimentos</h1><p>Localize uma pessoa ou retome um registro deste aparelho.</p></div><button data-new>Nova pessoa</button></div><label class="search-field"><span>Buscar pessoa</span><input type="search" data-person-search placeholder="Digite um nome" autocomplete="off"></label></section><section class="attendance-directory" aria-label="Pessoas cadastradas"><div class="attendance-directory__header"><span>Pessoa</span><span>Próximo passo</span></div><div class="attendance-directory__list" data-person-list></div></section>`;
   const personList = root.querySelector('[data-person-list]');
   const renderList = (query = '') => {
     const normalized = query.trim().toLocaleLowerCase('pt-BR');
-    const visible = people.filter((person) => person.name.toLocaleLowerCase('pt-BR').includes(normalized));
-    personList.innerHTML = visible.length ? visible.map((p) => `<button class="person-card" data-id="${p.id}"><strong>${p.name}</strong><span>${formatDateBr(p.birthDate)} · ${p.sex}</span></button>`).join('') : '<article class="empty-state"><p>Nenhum aluno encontrado.</p></article>';
+    const visible = attendance.filter(({ person }) => person.name.toLocaleLowerCase('pt-BR').includes(normalized));
+    personList.innerHTML = visible.length ? visible.map((item) => attendanceRowMarkup(item)).join('') : '<article class="empty-state"><p>Nenhuma pessoa encontrada.</p></article>';
     personList.querySelectorAll('[data-id]').forEach((button) => button.onclick = () => renderPerson(root, button.dataset.id));
+    personList.querySelectorAll('[data-resume-id]').forEach((button) => button.onclick = () => {
+      const person = people.find((item) => item.id === button.dataset.resumeId);
+      if (person) resumeLatestDraft(root, person);
+    });
+    personList.querySelectorAll('[data-start-id]').forEach((button) => button.onclick = () => {
+      const person = people.find((item) => item.id === button.dataset.startId);
+      if (person) renderStart(root, person);
+    });
   };
   renderList();
   root.querySelector('[data-person-search]').oninput = (event) => renderList(event.target.value);
   root.querySelector('[data-new]').onclick = () => renderPersonForm(root);
+}
+function localAssessmentRecords() {
+  return Object.keys(localStorage).filter((storageKey) => storageKey.startsWith('assessment:')).map((storageKey) => {
+    try { return JSON.parse(localStorage.getItem(storageKey)); } catch (_) { return null; }
+  }).filter(Boolean);
+}
+function attendanceRowMarkup({ person, kind, draft, history }) {
+  const profile = `${formatDateBr(person.birthDate)} · ${person.sex}`;
+  if (kind === 'draft') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span class="state-chip neutral">Rascunho neste aparelho</span><button class="secondary" data-resume-id="${person.id}">Retomar rascunho</button></div></article>`;
+  if (kind === 'history') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span>Última avaliação: ${formatDateBr(history.date)}</span><button class="secondary" data-id="${person.id}">Ver atendimento</button></div></article>`;
+  return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span>Sem registro neste aparelho</span><button class="secondary" data-start-id="${person.id}">Nova avaliação</button></div></article>`;
 }
 function renderPersonForm(root) {
   const navigation = startNavigation('person-form');
@@ -45,7 +68,7 @@ function renderPerson(root, id) {
 }
 
 function localAssessmentsFor(personId) {
-  return Object.keys(localStorage).filter((key) => key.startsWith('assessment:')).map((key) => JSON.parse(localStorage.getItem(key))).filter((assessment) => assessment.personId === personId);
+  return localAssessmentRecords().filter((assessment) => assessment.personId === personId);
 }
 function resumeLatestDraft(root, person) {
   const assessment = localAssessmentsFor(person.id).sort((a, b) => String(b.updatedAt || b.date).localeCompare(String(a.updatedAt || a.date)))[0];
@@ -74,7 +97,7 @@ async function renderHistory(root, person) {
   }
 }
 function renderHistoryList(root, person, assessments, subtitle, testId = '', navigation = startNavigation('history')) {
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${subtitle}</p></div><button class="secondary" data-back>Voltar</button></section>${xsteamSelectMarkup({ id: 'history-test', name: 'historyTest', label: 'Filtrar por teste', options: [['', 'Todos os testes'], ...TESTS], value: testId, dataAttribute: 'data-history-test' })}<p class="form-message" data-history-message></p><section class="list" data-history-list></section>`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${subtitle}</p></div><button class="secondary" data-back>Voltar</button></section>${xsteamSelectMarkup({ id: 'history-test', name: 'historyTest', label: 'Filtrar por teste', options: [['', 'Todos os testes'], ...TESTS], value: testId, dataAttribute: 'data-history-test' })}<p class="form-message" data-history-message></p><section class="history-timeline" data-history-list></section>`;
   bindXsteamSelects(root);
   const list = root.querySelector('[data-history-list]');
   let selectedTestId = testId;
@@ -84,7 +107,8 @@ function renderHistoryList(root, person, assessments, subtitle, testId = '', nav
   };
   const renderList = () => {
     const visible = filterHistory(assessments, { testId: selectedTestId });
-    list.innerHTML = visible.length ? visible.map((assessment) => `<button class="person-card" data-assessment-id="${assessment.assessmentId}"><strong>${formatDateBr(assessment.date)}</strong><span>${assessment.professionalName} · ${assessment.status} · ${assessment.colors.green} verdes · ${assessment.colors.yellow} amarelos · ${assessment.colors.gray} cinzas</span></button>`).join('') : '<article class="empty-state"><p>Nenhuma avaliação para este filtro.</p></article>';
+    const groups = groupHistoryByMonth(visible);
+    list.innerHTML = groups.length ? groups.map((group) => `<section class="history-month"><h2>${historyMonthLabel(group.key)}</h2>${group.items.map((assessment) => `<button class="history-entry" data-assessment-id="${assessment.assessmentId}"><strong>${formatDateBr(assessment.date)}</strong><span>${assessment.professionalName} · ${assessment.status} · ${assessment.testIds.length} teste${assessment.testIds.length === 1 ? '' : 's'}</span><span class="history-entry__tests">${assessment.testIds.map(testName).join(' · ')}</span></button>`).join('')}</section>`).join('') : '<article class="empty-state"><p>Nenhuma avaliação para este filtro.</p></article>';
     list.querySelectorAll('[data-assessment-id]').forEach((button) => button.onclick = () => {
       button.disabled = true;
       button.classList.add('is-loading');
@@ -95,6 +119,11 @@ function renderHistoryList(root, person, assessments, subtitle, testId = '', nav
   root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
   root.querySelector('[data-history-test]').onchange = (event) => { selectedTestId = event.target.value; startNavigation('history'); renderList(); };
   renderList();
+}
+function historyMonthLabel(key) {
+  if (key === 'sem-data') return 'Sem data';
+  const label = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${key}-01T12:00:00Z`));
+  return label.charAt(0).toLocaleUpperCase('pt-BR') + label.slice(1);
 }
 async function renderAssessmentHistory(root, person, assessmentId, onBack = () => renderHistory(root, person), navigation = startNavigation('assessment-history')) {
   try {
@@ -127,10 +156,10 @@ async function renderAssessmentHistory(root, person, assessmentId, onBack = () =
 }
 function renderStart(root, person) {
   const navigation = startNavigation('assessment-start');
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVA AVALIAÇÃO</p><h1>${person.name}</h1><p>Escolha os testes desta sessão.</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Data<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>${xsteamSelectMarkup({ id: 'assessment-professional', name: 'professionalName', label: 'Profissional', options: [['', 'Selecione'], ...PROFESSIONALS.map((name) => [name, name])], required: true })}<fieldset class="selection-group"><legend>Testes</legend><p class="selection-summary" data-selection-summary="start"></p><div class="selection-list">${selectionCardsMarkup({ name: 'testIds', items: TESTS })}</div></fieldset><button data-selection-action="start">Iniciar avaliação</button><p class="form-message"></p></form>`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVA AVALIAÇÃO</p><h1>${person.name}</h1><p>Configure a sessão e escolha os testes.</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card assessment-start"><section class="session-fields"><label>Data<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>${xsteamSelectMarkup({ id: 'assessment-professional', name: 'professionalName', label: 'Profissional', options: [['', 'Selecione'], ...PROFESSIONALS.map((name) => [name, name])], required: true })}</section><fieldset class="selection-group"><legend>Testes da sessão</legend><p class="selection-summary" data-selection-summary="start"></p><div class="selection-list">${selectionCardsMarkup({ name: 'testIds', items: TESTS })}</div></fieldset><button class="assessment-submit" data-selection-action="start" data-selection-ready="false" disabled>Selecione ao menos um teste</button><p class="form-message"></p></form>`;
   bindXsteamSelects(root);
   root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
   const form = root.querySelector('form');
-  bindSelectionSummary(form, { inputName: 'testIds', summarySelector: '[data-selection-summary="start"]', buttonSelector: '[data-selection-action="start"]', idleLabel: 'Iniciar avaliação' });
+  bindSelectionSummary(form, { inputName: 'testIds', summarySelector: '[data-selection-summary="start"]', buttonSelector: '[data-selection-action="start"]', idleLabel: 'Iniciar avaliação', requireSelection: true });
   form.onsubmit = async (event) => { event.preventDefault(); if (!validateXsteamSelects(event.currentTarget)) return; const data = new FormData(event.currentTarget); try { const start = buildAssessmentStart({ personId: person.id, professionalName: data.get('professionalName'), testIds: data.getAll('testIds') }); const assessment = { id: crypto.randomUUID(), personId: person.id, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, ...start, date: data.get('date'), status: 'rascunho', results: [] }; localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(assessment)); await queueMutation('createAssessment', assessmentForCreate(assessment)); if (!isCurrentNavigation(navigation)) return; startNavigation('assessment-editor'); renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id)); } catch (error) { if (isCurrentNavigation(navigation)) root.querySelector('.form-message').textContent = error.message; } };
 }

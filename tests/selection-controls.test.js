@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { selectionCardsMarkup, selectionSummary } from '../web/js/views/selection-controls.js';
+import { selectionActionState, selectionCardsMarkup, selectionSummary } from '../web/js/views/selection-controls.js';
 
 test('renders selected cards without changing checkbox names or values', () => {
   const markup = selectionCardsMarkup({
@@ -18,4 +18,17 @@ test('creates singular, plural and empty selection copy', () => {
   assert.deepEqual(selectionSummary(0, 'Iniciar avaliação'), { count: 'Nenhum teste selecionado', action: 'Iniciar avaliação' });
   assert.deepEqual(selectionSummary(1, 'Gerar relatório PDF'), { count: '1 teste selecionado', action: 'Gerar relatório PDF · 1 teste' });
   assert.deepEqual(selectionSummary(3, 'Adicionar testes'), { count: '3 testes selecionados', action: 'Adicionar testes · 3 testes' });
+});
+
+test('only marks the primary assessment action ready after a test is selected', () => {
+  assert.deepEqual(selectionActionState(0, 'Iniciar avaliação'), {
+    selectedCount: 0,
+    isReady: false,
+    label: 'Selecione ao menos um teste',
+  });
+  assert.deepEqual(selectionActionState(2, 'Iniciar avaliação'), {
+    selectedCount: 2,
+    isReady: true,
+    label: 'Iniciar avaliação · 2 testes',
+  });
 });

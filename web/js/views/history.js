@@ -10,3 +10,13 @@ export function historyTimeline(records, person) {
     colors: sessionColorCounts({ selectedTestIds: assessment.testIds || [], results: results || [], person, assessmentDate: assessment.date })
   }));
 }
+
+export function groupHistoryByMonth(items) {
+  return items.reduce((groups, item) => {
+    const key = String(item.date || '').slice(0, 7) || 'sem-data';
+    const current = groups[groups.length - 1];
+    if (current?.key === key) current.items.push(item);
+    else groups.push({ key, items: [item] });
+    return groups;
+  }, []);
+}
