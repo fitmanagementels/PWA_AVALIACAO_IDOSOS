@@ -36,10 +36,14 @@ O histórico adota uma timeline cronológica por mês, com filtro de teste, stat
 - Não introduzir métricas clínicas calculadas, classificações novas, agenda, fotos de pessoas ou navegação global sem suporte de dados.
 - Manter dark XSTEAM, logo original e lime `#E2FF42` para marca, ação clínica, foco e seleção.
 - Preservar menu próprio, comportamento de teclado, bottom sheet mobile e cache offline já implementados.
+- Preservar a guarda de navegação assíncrona (`startNavigation`, `isCurrentNavigation` e `isCurrentPage`): uma resposta de lista, histórico ou detalhe só pode renderizar se a tela que a iniciou continuar ativa.
+- Preservar a invalidação de cache do PWA: mudanças em módulos ou assets da central entram no manifesto do Service Worker e recebem uma nova versão a partir do cache atual v13.
 
 ## Verificação futura
 
 - Dados exibidos na central correspondem a registros locais, cache ou backend; nenhum estado é decorativo.
+- A central não invalida a navegação ativa ao atualizar dados em segundo plano; sincronização só atualiza o diretório quando a página atual for a central.
+- A timeline mantém o token de navegação e o retorno do detalhe preserva o filtro ativo, sem permitir que uma resposta atrasada reabra histórico ou detalhe fora de contexto.
 - Mobile mantém coluna única, 48 px de toque e nenhuma rolagem horizontal.
 - Desktop troca somente o diretório e o histórico densos para tabela/lista; o fluxo clínico permanece linear.
 - Testes cobrem o card de rascunho, os estados vazios e a ausência de métricas inventadas; inspeção visual cobre as três telas em mobile e desktop.

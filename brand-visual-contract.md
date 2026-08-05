@@ -152,6 +152,7 @@
 
 - Requisitos considerados: a abertura do PWA deve ser uma central de atendimentos; cadastro, rascunho, avaliação e consulta permanecem rotinas clínicas; a referência visual vem das três direções fornecidas pelo Stitch.
 - Premissas: somente estados que já existam localmente, no cache ou no backend podem ser exibidos; não criar score, prontidão, alerta clínico, agenda, protocolo ou métrica agregada sem dados e regra aprovados.
+- Premissas de integração: a nova composição preserva a guarda contra respostas assíncronas atrasadas e só atualiza a central se ela continuar sendo a página ativa; assets novos entram no cache versionado do PWA.
 - Tarefa e decisão principais: encontrar ou criar a pessoa certa e decidir entre continuar um rascunho real, iniciar nova avaliação ou consultar seu histórico.
 
 ### Perfil
