@@ -225,7 +225,7 @@ node --check web/js/navigation-guard.js
 
 Resultado esperado: todos os testes aprovados, nenhuma saída de `git diff --check`, e nenhuma saída de `node --check`.
 
-- [ ] **Passo 5: Registrar e publicar apenas os arquivos desta mudança.**
+- [x] **Passo 5: Registrar e publicar apenas os arquivos desta mudança.**
 
 ```bash
 git add docs/superpowers/plans/2026-08-05-navegacao-assincrona-segura.md web/js/navigation-guard.js web/js/views/people.js web/js/app.js web/sw.js tests/navigation-guard.test.js tests/people-history.test.js tests/app-navigation.test.js tests/service-worker.test.js
