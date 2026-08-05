@@ -3,6 +3,7 @@ import { request } from './api-client.js';
 import { flushQueue, pendingStatus } from './sync-status.js';
 import { renderSyncPanel } from './views/sync-panel.js';
 import { renderPeople, replacePeopleFromApi } from './views/people.js';
+import { isCurrentPage } from './navigation-guard.js';
 
 const status = document.querySelector('[data-sync-status]');
 const syncDock = document.querySelector('[data-sync-dock]');
@@ -13,7 +14,7 @@ async function refreshPeople() {
   if (!navigator.onLine) return;
   const response = await request('listPeople', {}, 'GET');
   replacePeopleFromApi(response.data);
-  renderPeople(root);
+  if (isCurrentPage('people')) renderPeople(root);
 }
 async function synchronize() {
   if (!mutationQueue) return renderStatus({ phase: 'error', pendingCount: 0, message: 'sincronização indisponível neste navegador', items: [] });

@@ -9,12 +9,14 @@ import { assessmentForCreate, assessmentFromApi, historySummaryFromApi, personFo
 import { request } from '../api-client.js';
 import { bindSelectionSummary, selectionCardsMarkup } from './selection-controls.js';
 import { bindXsteamSelects, validateXsteamSelects, xsteamSelectMarkup } from './xsteam-select.js';
+import { isCurrentNavigation, startNavigation } from '../navigation-guard.js';
 const key = 'avaliacao-idosos-people';
 const testName = (id) => TESTS.find(([testId]) => testId === id)?.[1] || id;
 const read = () => JSON.parse(localStorage.getItem(key) || '[]');
 const write = (items) => localStorage.setItem(key, JSON.stringify(items));
 export function replacePeopleFromApi(records) { write(records.map(personFromApi)); }
 export function renderPeople(root) {
+  startNavigation('people');
   const people = read();
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO FUNCIONAL</p><h1>Pessoas</h1><p>Encontre um aluno ou crie um cadastro.</p></div><button data-new>Nova pessoa</button></section><label class="search-field">Buscar aluno<input type="search" data-person-search placeholder="Digite um nome"></label><section class="list" data-person-list></section>`;
   const personList = root.querySelector('[data-person-list]');
@@ -29,12 +31,14 @@ export function renderPeople(root) {
   root.querySelector('[data-new]').onclick = () => renderPersonForm(root);
 }
 function renderPersonForm(root) {
+  const navigation = startNavigation('person-form');
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVO CADASTRO</p><h1>Pessoa avaliada</h1></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Nome completo<input name="name" required></label><label>Data de nascimento<input name="birthDate" type="date" required></label>${xsteamSelectMarkup({ id: 'person-sex', name: 'sex', label: 'Sexo', options: [['', 'Selecione'], ['masculino', 'Masculino'], ['feminino', 'Feminino']], required: true })}<label>WhatsApp (opcional)<input name="whatsapp" inputmode="tel"></label><button>Salvar pessoa</button></form>`;
   bindXsteamSelects(root);
   root.querySelector('[data-back]').onclick = () => renderPeople(root);
-  root.querySelector('form').onsubmit = async (event) => { event.preventDefault(); if (!validateXsteamSelects(event.currentTarget)) return; const data = new FormData(event.currentTarget); const person = { id: crypto.randomUUID(), name: data.get('name').trim(), birthDate: data.get('birthDate'), sex: data.get('sex'), whatsapp: String(data.get('whatsapp')).replace(/\D/g, '') }; write([...read(), person]); await queueMutation('savePerson', personForSave(person)); renderPerson(root, person.id); };
+  root.querySelector('form').onsubmit = async (event) => { event.preventDefault(); if (!validateXsteamSelects(event.currentTarget)) return; const data = new FormData(event.currentTarget); const person = { id: crypto.randomUUID(), name: data.get('name').trim(), birthDate: data.get('birthDate'), sex: data.get('sex'), whatsapp: String(data.get('whatsapp')).replace(/\D/g, '') }; write([...read(), person]); await queueMutation('savePerson', personForSave(person)); if (isCurrentNavigation(navigation)) renderPerson(root, person.id); };
 }
 function renderPerson(root, id) {
+  startNavigation('person');
   const person = read().find((item) => item.id === id); if (!person) return renderPeople(root); const link = whatsAppUrl(person.whatsapp);
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${formatDateBr(person.birthDate)} · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
   root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => renderStart(root, person); root.querySelector('[data-resume]').onclick = () => resumeLatestDraft(root, person); root.querySelector('[data-history]').onclick = () => renderHistory(root, person);
@@ -46,11 +50,13 @@ function localAssessmentsFor(personId) {
 function resumeLatestDraft(root, person) {
   const assessment = localAssessmentsFor(person.id).sort((a, b) => String(b.updatedAt || b.date).localeCompare(String(a.updatedAt || a.date)))[0];
   if (!assessment) return alert('Nenhum rascunho neste aparelho. Consulte o histórico para avaliações já sincronizadas.');
+  startNavigation('assessment-editor');
   renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id));
 }
 async function renderHistory(root, person) {
+  const navigation = startNavigation('history');
   const cached = readHistoryCache(localStorage, person.id);
-  if (cached.length) renderHistoryList(root, person, cached, 'Histórico deste aparelho · atualizando dados compartilhados…');
+  if (cached.length) renderHistoryList(root, person, cached, 'Histórico deste aparelho · atualizando dados compartilhados…', '', navigation);
   else {
     root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>Carregando avaliações salvas na planilha…</p></div><button class="secondary" data-back>Voltar</button></section>`;
     root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
@@ -60,12 +66,14 @@ async function renderHistory(root, person) {
     const records = response.data.map(historySummaryFromApi);
     const assessments = historyTimeline(records, person);
     writeHistoryCache(localStorage, person.id, assessments);
-    renderHistoryList(root, person, assessments, assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.');
+    if (!isCurrentNavigation(navigation)) return;
+    renderHistoryList(root, person, assessments, assessments.length ? 'Selecione uma avaliação para ver os resultados.' : 'Ainda não há avaliações sincronizadas.', '', navigation);
   } catch (error) {
+    if (!isCurrentNavigation(navigation)) return;
     root.querySelector('.screen-title p:not(.eyebrow)').textContent = cached.length ? 'Mostrando histórico salvo neste aparelho. A atualização compartilhada está indisponível.' : `Não foi possível carregar o histórico: ${error.message}`;
   }
 }
-function renderHistoryList(root, person, assessments, subtitle, testId = '') {
+function renderHistoryList(root, person, assessments, subtitle, testId = '', navigation = startNavigation('history')) {
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">HISTÓRICO COMPARTILHADO</p><h1>${person.name}</h1><p>${subtitle}</p></div><button class="secondary" data-back>Voltar</button></section>${xsteamSelectMarkup({ id: 'history-test', name: 'historyTest', label: 'Filtrar por teste', options: [['', 'Todos os testes'], ...TESTS], value: testId, dataAttribute: 'data-history-test' })}<p class="form-message" data-history-message></p><section class="list" data-history-list></section>`;
   bindXsteamSelects(root);
   const list = root.querySelector('[data-history-list]');
@@ -85,19 +93,21 @@ function renderHistoryList(root, person, assessments, subtitle, testId = '') {
     });
   };
   root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
-  root.querySelector('[data-history-test]').onchange = (event) => { selectedTestId = event.target.value; renderList(); };
+  root.querySelector('[data-history-test]').onchange = (event) => { selectedTestId = event.target.value; startNavigation('history'); renderList(); };
   renderList();
 }
-async function renderAssessmentHistory(root, person, assessmentId, onBack = () => renderHistory(root, person)) {
+async function renderAssessmentHistory(root, person, assessmentId, onBack = () => renderHistory(root, person), navigation = startNavigation('assessment-history')) {
   try {
     const response = await request('getAssessment', { avaliacaoId: assessmentId }, 'GET');
     const assessment = assessmentFromApi(response.data.assessment);
     const results = response.data.results;
+    if (!isCurrentNavigation(navigation)) return;
     root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${formatDateBr(assessment.date)}</h1><p>${assessment.professionalName} · ${assessment.status}</p></div><button class="secondary" data-back>Voltar</button></section><section class="list">${results.length ? results.map((result) => `<article class="empty-state"><strong>${testName(result.testeId)}${result.lado ? ` · ${result.lado}` : ''}</strong><p>${result.status === 'naoConcluido' ? `Não concluído: ${result.motivoNaoConcluido}` : `${result.valorOficial} ${result.unidade}${result.classificacao ? ` · ${result.classificacao}` : ''}`}</p></article>`).join('') : '<article class="empty-state"><p>Sem resultados registrados.</p></article>'}</section><section class="action-grid"><button class="secondary" data-edit>Editar e complementar</button><button data-report>Exportar relatório PDF</button></section><p class="form-message"></p>`;
     root.querySelector('[data-back]').onclick = onBack;
     root.querySelector('[data-edit]').onclick = () => {
       const editable = { ...assessment, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, results: resultsFromApi(results) };
       localStorage.setItem(`assessment:${editable.id}`, JSON.stringify(editable));
+      startNavigation('assessment-editor');
       renderAssessmentEditor(root, editable, () => renderAssessmentHistory(root, person, assessment.id, onBack));
     };
     root.querySelector('[data-report]').onclick = () => {
@@ -112,14 +122,15 @@ async function renderAssessmentHistory(root, person, assessmentId, onBack = () =
       };
     };
   } catch (error) {
-    onBack(`Não foi possível carregar esta avaliação: ${error.message}`);
+    if (isCurrentNavigation(navigation)) onBack(`Não foi possível carregar esta avaliação: ${error.message}`);
   }
 }
 function renderStart(root, person) {
+  const navigation = startNavigation('assessment-start');
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">NOVA AVALIAÇÃO</p><h1>${person.name}</h1><p>Escolha os testes desta sessão.</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card"><label>Data<input name="date" type="date" value="${new Date().toISOString().slice(0, 10)}" required></label>${xsteamSelectMarkup({ id: 'assessment-professional', name: 'professionalName', label: 'Profissional', options: [['', 'Selecione'], ...PROFESSIONALS.map((name) => [name, name])], required: true })}<fieldset class="selection-group"><legend>Testes</legend><p class="selection-summary" data-selection-summary="start"></p><div class="selection-list">${selectionCardsMarkup({ name: 'testIds', items: TESTS })}</div></fieldset><button data-selection-action="start">Iniciar avaliação</button><p class="form-message"></p></form>`;
   bindXsteamSelects(root);
   root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
   const form = root.querySelector('form');
   bindSelectionSummary(form, { inputName: 'testIds', summarySelector: '[data-selection-summary="start"]', buttonSelector: '[data-selection-action="start"]', idleLabel: 'Iniciar avaliação' });
-  form.onsubmit = async (event) => { event.preventDefault(); if (!validateXsteamSelects(event.currentTarget)) return; const data = new FormData(event.currentTarget); try { const start = buildAssessmentStart({ personId: person.id, professionalName: data.get('professionalName'), testIds: data.getAll('testIds') }); const assessment = { id: crypto.randomUUID(), personId: person.id, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, ...start, date: data.get('date'), status: 'rascunho', results: [] }; localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(assessment)); await queueMutation('createAssessment', assessmentForCreate(assessment)); renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id)); } catch (error) { root.querySelector('.form-message').textContent = error.message; } };
+  form.onsubmit = async (event) => { event.preventDefault(); if (!validateXsteamSelects(event.currentTarget)) return; const data = new FormData(event.currentTarget); try { const start = buildAssessmentStart({ personId: person.id, professionalName: data.get('professionalName'), testIds: data.getAll('testIds') }); const assessment = { id: crypto.randomUUID(), personId: person.id, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, ...start, date: data.get('date'), status: 'rascunho', results: [] }; localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(assessment)); await queueMutation('createAssessment', assessmentForCreate(assessment)); if (!isCurrentNavigation(navigation)) return; startNavigation('assessment-editor'); renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id)); } catch (error) { if (isCurrentNavigation(navigation)) root.querySelector('.form-message').textContent = error.message; } };
 }
