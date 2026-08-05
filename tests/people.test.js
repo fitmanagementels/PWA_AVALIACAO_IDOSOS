@@ -44,3 +44,9 @@ test('returns to the history list with the active filter after opening an assess
   assert.match(source, /const returnToHistory = \(message = ''\) => \{[\s\S]*renderHistoryList\(root, person, assessments, subtitle, selectedTestId\)/);
   assert.match(source, /renderAssessmentHistory\(root, person, button\.dataset\.assessmentId, returnToHistory\)/);
 });
+
+test('does not treat the detail back button click event as a history message', () => {
+  const source = fs.readFileSync('web/js/views/people.js', 'utf8');
+
+  assert.match(source, /root\.querySelector\('\[data-back\]'\)\.onclick = \(\) => onBack\(\);/);
+});

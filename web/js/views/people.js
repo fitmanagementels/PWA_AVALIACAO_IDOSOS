@@ -103,7 +103,7 @@ async function renderAssessmentHistory(root, person, assessmentId, onBack = () =
     const results = response.data.results;
     if (!isCurrentNavigation(navigation)) return;
     root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${formatDateBr(assessment.date)}</h1><p>${assessment.professionalName} · ${assessment.status}</p></div><button class="secondary" data-back>Voltar</button></section><section class="list">${results.length ? results.map((result) => `<article class="empty-state"><strong>${testName(result.testeId)}${result.lado ? ` · ${result.lado}` : ''}</strong><p>${result.status === 'naoConcluido' ? `Não concluído: ${result.motivoNaoConcluido}` : `${result.valorOficial} ${result.unidade}${result.classificacao ? ` · ${result.classificacao}` : ''}`}</p></article>`).join('') : '<article class="empty-state"><p>Sem resultados registrados.</p></article>'}</section><section class="action-grid"><button class="secondary" data-edit>Editar e complementar</button><button data-report>Exportar relatório PDF</button></section><p class="form-message"></p>`;
-    root.querySelector('[data-back]').onclick = onBack;
+    root.querySelector('[data-back]').onclick = () => onBack();
     root.querySelector('[data-edit]').onclick = () => {
       const editable = { ...assessment, personName: person.name, personSex: person.sex, personBirthDate: person.birthDate, results: resultsFromApi(results) };
       localStorage.setItem(`assessment:${editable.id}`, JSON.stringify(editable));
