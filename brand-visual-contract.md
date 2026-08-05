@@ -94,10 +94,26 @@
 - Mobile — cartões em coluna única (mínimo 52 px) e toggle “Não concluído” com alvo de 44 px; sem rolagem horizontal.
 - Skills executadas neste aditivo: `brand-criar-navegacao-interacao` definiu os estados de seleção e contagem; `brand-aplicar-marca-e-acabamento` aplicou cartões/toggle, foco lime e motion reduzido.
 
+### Aditivo — barra de comandos e menus próprios (05/08/2026)
+
+- Trabalho recorrente e fluxo curto: pessoa → nova/retomar avaliação ou histórico; dentro do histórico, filtrar e abrir uma avaliação sem perder a pessoa, o filtro ou a posição de rolagem.
+- Ação primária por contexto: somente a ação clínica principal usa lime; sincronizar, voltar e filtrar permanecem secundárias e não disputam prioridade.
+- Hierarquia, retorno e contexto preservado: a barra fixa contém marca, contexto resumido e sincronização; o retorno volta à tela anterior sem redefinir a seleção ou o filtro.
+- Overlays — tipo, uso e justificativa: cada menu próprio abre um popover ancorado no desktop e bottom sheet no mobile. Não há modal: selecionar profissional, sexo ou filtro é tarefa recorrente e curta.
+- Mobile — a barra conserva marca e sincronização compacta; menu abre como bottom sheet de opções de 48 px+ e fecha por toque fora, escolha ou `Esc` quando houver teclado.
+
+### Estados — barra e menus próprios
+| Superfície/ação | idle | loading | success | empty | error | disabled |
+|---|---|---|---|---|---|---|
+| Barra de comandos | marca + contexto + sincronização resumida | indicador de sincronização existente | estado “Sincronizado” | não se aplica | estado de fila existente + tentar novamente | botão de sincronização somente durante envio |
+| Menu próprio | rótulo atual e chevron | não se aplica | opção selecionada, fecha e atualiza campo | “Nenhuma opção disponível” | mantém valor anterior e informa falha de inicialização | trigger indisponível só quando a lista não existir |
+| Histórico | cartões de avaliações e filtro preservado | skeleton curto só sem cache | cartão abre detalhe | convite para iniciar a primeira avaliação | mantém cache local e mostra recuperação | filtro indisponível se não houver opções |
+
 ### Motion e acessibilidade
 - Transições (`transform`/`opacity`, 180–250 ms): entrada e troca de estado da faixa de sincronização; sem animação em campos ou registros clínicos.
 - Comportamento com `prefers-reduced-motion`: mudança instantânea de estado, preservando ícone, texto e ação.
 - Foco, teclado e toque: botão de sincronizar possui foco lime visível, rótulo textual e alvo mínimo de 44 px; mensagens usam `aria-live` sem roubar o foco.
+- Menus próprios: `Enter`/espaço abre e seleciona, setas percorrem opções, `Home`/`End` saltam para extremos, `Esc` fecha e restaura o foco ao trigger; cada opção tem rótulo textual e alvo mínimo de 48 px.
 
 ## Marca e acabamento
 - Voz visual aplicada: dark premium operacional, com contraste alto e sem ornamentação concorrente.
