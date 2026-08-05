@@ -21,3 +21,15 @@ test('styles premium selection cards and binary toggles accessibly', () => {
   assert.match(css, /min-height:\s*52px/);
   assert.match(css, /@media \(max-width: 480px\)/);
 });
+
+test('styles XSTEAM menus as dark popovers and mobile bottom sheets', () => {
+  const css = fs.readFileSync('web/styles/app.css', 'utf8');
+  assert.match(css, /\.brand-lockup/);
+  assert.match(css, /\.xsteam-select__trigger/);
+  assert.match(css, /\.xsteam-select__options/);
+  assert.match(css, /\.xsteam-select__layer\[hidden\]/);
+  assert.match(css, /@media \(max-width: 600px\)/);
+  assert.match(css, /min-height:\s*48px/);
+  assert.match(css, /\.xsteam-select__trigger:focus-visible/);
+  assert.match(css, /\.search-field input/);
+});
