@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { flushQueue } from '../web/js/sync-status.js';
+import { createMutationQueue } from '../web/js/storage.js';
 
 function memoryQueue(items) {
   const values = new Map(items.map((item) => [item.id, item]));
@@ -9,6 +10,15 @@ function memoryQueue(items) {
     async remove(id) { values.delete(id); },
     async clearFailure(id) { const item = values.get(id); if (item) delete item.lastError; },
     async markFailed(id, message) { const item = values.get(id); values.set(id, { ...item, lastError: message }); }
+  };
+}
+
+function memoryStore() {
+  const values = new Map();
+  return {
+    async getAll() { return [...values.values()]; },
+    async put(value) { values.set(value.id, value); },
+    async remove(id) { values.delete(id); },
   };
 }
 
@@ -32,4 +42,14 @@ test('removes confirmed mutations and reports an empty queue', async () => {
   const result = await flushQueue(queue, async () => ({ ok: true }));
 
   assert.deepEqual(result, { ok: true, phase: 'synced', pendingCount: 0, message: 'Tudo sincronizado', items: [] });
+});
+
+test('removes a confirmed mutation through the real browser queue interface', async () => {
+  const queue = createMutationQueue(memoryStore());
+  await queue.enqueue({ id: 'm1', action: 'saveAssessment', payload: {} });
+
+  const result = await flushQueue(queue, async () => ({ ok: true }));
+
+  assert.equal(result.ok, true);
+  assert.equal((await queue.list()).length, 0);
 });

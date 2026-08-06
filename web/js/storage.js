@@ -10,6 +10,7 @@ export function createMutationQueue(store) {
       return (await store.getAll()).some((item) => item.assessmentId === assessmentId);
     },
     async list() { return (await store.getAll()).sort((a, b) => String(a.queuedAt || '').localeCompare(String(b.queuedAt || ''))); },
+    async remove(id) { await store.remove(id); },
     async markFailed(id, message) {
       const mutation = (await store.getAll()).find((item) => item.id === id);
       if (!mutation) return;
