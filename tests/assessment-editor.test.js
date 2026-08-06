@@ -4,10 +4,23 @@ import test from 'node:test';
 
 const source = fs.readFileSync('web/js/views/assessment-editor.js', 'utf8');
 
-test('renders tests as closed details cards and persists draft inputs', () => {
-  assert.match(source, /<details class="test-card"/);
-  assert.match(source, /draftInputs/);
-  assert.match(source, /saveDraft\(assessment\)/);
+test('renders compact test cards and opens the local detail sheet instead of expanded details', () => {
+  assert.match(source, /class="test-summary-card"/);
+  assert.match(source, /openTestSheet/);
+  assert.match(source, /testCardSummary/);
+  assert.doesNotMatch(source, /<details class="test-card"/);
+});
+
+test('keeps global save based on accumulated local test draft inputs', () => {
+  assert.match(source, /draftInputs: assessment\.draftInputs/);
+  assert.match(source, /replaceTestDraftInputs/);
+  assert.match(source, /collectResult\(id, data\)/);
+  assert.doesNotMatch(source, /request\(/);
+});
+
+test('restores focus to the rebuilt test card after closing its sheet', () => {
+  assert.match(source, /root\.querySelector\(`\[data-open-test=/);
+  assert.match(source, /replacement\?\.focus\(\)/);
 });
 
 test('offers adding tests and manual completion', () => {
@@ -16,10 +29,8 @@ test('offers adding tests and manual completion', () => {
   assert.match(source, /assessmentReadiness/);
 });
 
-test('uses premium cards for added tests and toggles for non-completed tests', () => {
+test('uses premium cards for added tests while the detail sheet owns non-completed toggles', () => {
   assert.match(source, /selectionCardsMarkup\(\{ name: 'additionalTestIds'/);
   assert.match(source, /data-selection-summary="additional"/);
-  assert.match(source, /class="selection-toggle"/);
-  assert.match(source, /notCompletedToggle\('sppb-not-completed', inputs\)/);
-  assert.match(source, /notCompletedToggle\(`\$\{id\}-not-completed`, inputs\)/);
+  assert.match(source, /testFieldsMarkup/);
 });

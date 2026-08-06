@@ -42,3 +42,15 @@ test('styles the attendance center, timeline and ready session action responsive
   assert.match(css, /\.assessment-submit\[data-selection-ready="true"\]/);
   assert.match(css, /@media \(min-width: 760px\)/);
 });
+
+test('styles the contextual test sheet with a translucent scrim and responsive compact grids', () => {
+  const css = fs.readFileSync('web/styles/app.css', 'utf8');
+  assert.match(css, /\.test-summary-card/);
+  assert.match(css, /\.test-sheet-layer/);
+  assert.match(css, /\.test-sheet-scrim/);
+  assert.match(css, /\.test-sheet__visual/);
+  assert.match(css, /\.test-attempt-group/);
+  assert.match(css, /@media \(min-width: 760px\)/);
+  assert.match(css, /@media \(max-width: 759px\)/);
+  assert.match(css, /min-height:\s*48px/);
+});
