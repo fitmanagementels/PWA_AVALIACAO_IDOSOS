@@ -1,7 +1,7 @@
 # Painel de teste XSTEAM — especificação de design
 
 **Data:** 06/08/2026  
-**Status:** aprovado para especificação; aguardando revisão escrita antes do plano técnico.
+**Status:** design aprovado; plano técnico preparado.
 
 ## Objetivo
 
