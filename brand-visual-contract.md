@@ -240,4 +240,27 @@
 - Mobile — ordem, alcance, legibilidade, overflow e overlays: diretório mantém uma coluna, ações possuem mínimo de 48 px e o CTA de avaliação só fixa acima da faixa de sincronização após haver teste selecionado.
 - Motion com `transform`/`opacity`: nenhuma animação nova foi adicionada à central; transições existentes continuam limitadas a propriedades seguras.
 - `prefers-reduced-motion`: regra global existente remove transições e animações não essenciais.
-- Pendências restantes: conferir em navegador real com os registros habituais após o cache `v14` ser publicado.
+- Pendências restantes: conferir em navegador real com os registros habituais após o cache `v15` ser publicado.
+
+## Navegação e interação — painel de teste (06/08/2026)
+
+- Trabalho recorrente e fluxo curto: abrir um teste → consultar procedimento/referência visual → registrar tentativas ou motivo → salvar localmente e voltar ao resumo do teste.
+- Ação primária por contexto: “Salvar e voltar” é a única ação primária da sheet; os CTAs de salvar/concluir a avaliação seguem fora dela e continuam responsáveis pela fila de sincronização.
+- Hierarquia, retorno e contexto preservado: a avaliação permanece na mesma posição atrás da sheet; fechar restaura foco ao cartão de origem e não apaga valores já persistidos localmente.
+- Overlays — tipo, uso e justificativa: sheet contextual para preenchimento recorrente; scrim verde-preto translúcido reduz distração sem apagar a avaliação. Não é modal de confirmação e não cria uma nova rota.
+- Mobile — destinos, ação e transformação de overlays: sheet quase em tela cheia, imagem acima do procedimento e campos em uma ou duas colunas conforme largura; voltar fecha a sheet antes de sair da avaliação.
+
+### Estados
+
+| Superfície/ação | idle | loading | success | empty | error | disabled |
+|---|---|---|---|---|---|---|
+| Cartão de teste | título e resumo | persistência discreta | resumo atualizado | “Nenhuma tentativa” | aviso de falha local | não se aplica |
+| Sheet de teste | procedimento e campos | salvando localmente | alterações salvas antes do retorno | campos vazios | erro persistente + tentar salvar | salvar durante a persistência |
+| Não concluído | toggle desligado | não se aplica | motivo local salvo | motivo vazio | motivo obrigatório | medições inativas quando ativo |
+| Placeholder visual | moldura e rótulo | não se aplica | futura imagem | “Inserir referência” | texto alternativo de indisponibilidade | não se aplica |
+
+### Motion e acessibilidade
+
+- Transições (`transform`/`opacity`, 180–250 ms): entrada/saída da sheet e do scrim; nenhuma animação em valores clínicos ou no rascunho.
+- Comportamento com `prefers-reduced-motion`: abertura e fechamento instantâneos, preservando título, estados e foco.
+- Foco, teclado e toque: `role="dialog"`, foco contido, `Esc`/fechar/scrim retornam ao cartão originador; alvos mínimos de 48 px e unidades visíveis em cada campo numérico.
