@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório A5 digital — XSTEAM</title>
+  <style>
+    @page { size: A5 portrait; margin: 0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #11251d; background: #e8efea; font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; line-height: 1.34; }
+    .page { width: 148mm; height: 210mm; position: relative; display: flex; flex-direction: column; overflow: hidden; padding: 8mm; background: #f4f7f4; break-before: page; page-break-before: always; }
+    .page:first-child { break-before: auto; page-break-before: auto; }
+    .summary-page { background: linear-gradient(180deg, #f4f7f4 0%, #edf3ee 100%); }
+    .technical { background: linear-gradient(155deg, #eff5f0 0%, #f6f8f5 68%, #edf4ef 100%); }
+    .technical::before { content: ''; position: absolute; right: -8mm; bottom: 15mm; width: 53mm; height: 53mm; opacity: .045; background: url('../../../web/icons/xsteam-mark.svg') center / contain no-repeat; filter: grayscale(1); }
+    .technical > * { position: relative; z-index: 1; }
+
+    .hero { min-height: 35mm; display: flex; align-items: center; justify-content: space-between; gap: 4mm; padding: 5mm; border-radius: 5mm; color: #f5faf6; background: linear-gradient(135deg, #06140f 0%, #0b2118 62%, #183b2a 100%); box-shadow: 0 3mm 9mm rgba(7, 29, 19, .12); }
+    .hero-brand { display: flex; align-items: center; gap: 3.2mm; min-width: 0; }
+    .hero-logo { width: 13mm; height: 13mm; flex: 0 0 13mm; }
+    .hero-name { font-size: 13.2pt; font-weight: 800; letter-spacing: .12em; }
+    .hero-sub { margin-top: 1mm; color: #bdcfc5; font-size: 7.5pt; }
+    .hero-pill { flex: 0 0 auto; padding: 1.6mm 2.5mm; border: 1px solid rgba(223, 251, 69, .36); border-radius: 9mm; color: #dffb45; font-size: 6.8pt; font-weight: 800; letter-spacing: .09em; }
+
+    .intro { margin: 5mm 0 0; }
+    .eyebrow { margin: 0 0 1.7mm; color: #4b6b5e; font-size: 7.3pt; font-weight: 800; letter-spacing: .12em; }
+    .title { margin: 0; font-size: 21pt; line-height: 1.02; letter-spacing: -.05em; }
+    .subtitle { margin: 1.8mm 0 0; color: #4d6b60; font-size: 9pt; }
+    .identity { margin-top: 4.2mm; display: flex; justify-content: space-between; align-items: center; gap: 3mm; padding: 3.6mm 4mm; border: 1px solid #c8d9cf; border-left: 1.4mm solid #dffb45; border-radius: 3.2mm; background: rgba(227, 237, 231, .88); }
+    .identity-name { display: block; font-size: 11.5pt; font-weight: 800; }
+    .identity-meta { display: block; margin-top: 1mm; color: #4c6a5f; font-size: 7.7pt; }
+    .identity-status { flex: 0 0 auto; color: #2c5d45; font-size: 6.6pt; font-weight: 800; letter-spacing: .07em; text-align: right; }
+
+    .results-section { min-height: 0; flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 4.7mm; }
+    .section-title, .domain { margin: 0 0 2.4mm; color: #49695c; font-size: 7.8pt; font-weight: 800; letter-spacing: .12em; }
+    .result-grid { height: 66mm; flex: 0 0 66mm; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3mm; }
+    .result { min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 2.7mm; overflow: hidden; border: 1px solid #c5d8cd; border-radius: 4mm; background: rgba(255, 255, 255, .84); box-shadow: 0 1.5mm 3.5mm rgba(26, 60, 41, .045); }
+    .result h3 { margin: 0 0 1.1mm; font-size: 8.8pt; line-height: 1.14; }
+    .value { font-size: 15.5pt; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+    .value.compact { font-size: 12pt; }
+    .tag { align-self: flex-start; display: inline-block; margin-top: 1.2mm; padding: .7mm 1.5mm; border-radius: 9mm; background: #e7efe9; color: #36564a; font-size: 6.4pt; font-weight: 800; }
+    .tag.neutral { background: #edf0ee; color: #68796f; }
+    .note { margin-top: 3.5mm; padding: 3.4mm 4mm; border-left: 1.4mm solid #dffb45; border-radius: 0 3.2mm 3.2mm 0; background: #e4ede7; }
+    .note h2 { margin: 0 0 1.2mm; font-size: 9.2pt; }.note p { margin: 0; font-size: 8.4pt; }
+
+    .technical-top { display: flex; align-items: center; justify-content: space-between; gap: 3mm; padding-bottom: 3.3mm; border-bottom: 1px solid #c5d7cc; }
+    .technical-brand { display: flex; align-items: center; gap: 2mm; color: #213f31; font-size: 7.2pt; font-weight: 800; letter-spacing: .1em; }
+    .technical-brand img { width: 7mm; height: 7mm; }
+    .technical-index { color: #547266; font-size: 7pt; font-weight: 800; }
+    .technical-heading { margin-top: 4mm; }
+    .technical-heading .eyebrow { margin-bottom: 1.3mm; }
+    .technical-heading .title { font-size: 19pt; }
+    .technical-content { min-height: 0; flex: 1; display: flex; flex-direction: column; margin-top: 4.5mm; }
+    .domain { margin-bottom: 2.7mm; }
+    .tech { min-height: 0; flex: 1; margin-bottom: 2.8mm; padding: 4mm; border: 1px solid #c5d8cd; border-radius: 4mm; background: rgba(255, 255, 255, .78); box-shadow: 0 1.5mm 3.5mm rgba(26, 60, 41, .04); break-inside: avoid; }
+    .tech h3 { margin: 0 0 1.8mm; font-size: 10pt; }.tech-value { margin-bottom: 1.5mm; font-size: 15pt; font-weight: 800; letter-spacing: -.035em; }.tech p { margin: 1.2mm 0 0; font-size: 8.2pt; }.tech b { color: #3b5d4e; }
+    .summary { margin-top: .2mm; padding: 3.4mm 4mm; border: 1px solid #c5d8cd; border-radius: 3mm; background: #e4ede7; font-size: 7.8pt; }
+    .footer { display: flex; justify-content: space-between; gap: 4mm; margin-top: 3mm; padding-top: 2.1mm; border-top: 1px solid #c5d7cc; color: #60766b; font-size: 6.7pt; }
+  </style>
+</head>
+<body>
+  <section class="page summary-page">
+    <header class="hero">
+      <div class="hero-brand"><img class="hero-logo" src="../../../web/icons/xsteam-mark.svg" alt="Logo XSTEAM"><div><div class="hero-name">XSTEAM</div><div class="hero-sub">Avaliação funcional</div></div></div>
+      <div class="hero-pill">AVALIAÇÃO</div>
+    </header>
+    <div class="intro"><p class="eyebrow">RELATÓRIO DE AVALIAÇÃO FUNCIONAL</p><h1 class="title">Resumo da sessão</h1><p class="subtitle">Resultados objetivos dos testes concluídos.</p></div>
+    <div class="identity"><div><span class="identity-name">Maria Silva · 72 anos</span><span class="identity-meta">Avaliação em 06/08/2026 · Atualizado às 14h30 · Responsável: Elohim Lima</span></div><span class="identity-status">PRONTUÁRIO<br>FUNCIONAL</span></div>
+    <section class="results-section"><h2 class="section-title">RESULTADOS REALIZADOS</h2><div class="result-grid">
+      <article class="result"><h3>Caminhada 4 m</h3><div class="value">5,8 s</div><span class="tag">Referência</span></article><article class="result"><h3>SPPB</h3><div class="value">9/12</div><span class="tag">Escore</span></article>
+      <article class="result"><h3>2-Minute Step</h3><div class="value">81</div><span class="tag">elevações</span></article><article class="result"><h3>Extensão joelho</h3><div class="value compact">D 36 · E 33 kgf</div><span class="tag neutral">Sem referência</span></article>
+      <article class="result"><h3>Remada</h3><div class="value compact">D 29 · E 27 kgf</div><span class="tag neutral">Sem referência</span></article><article class="result"><h3>Sit-and-Reach</h3><div class="value compact">D 8 · E 6 cm</div><span class="tag">Registrado</span></article>
+    </div></section>
+    <section class="note"><h2>Observações do profissional</h2><p>Participante colaborativa durante a sessão. Orientação verbal mantida nos testes de força; sem intercorrências registradas.</p></section>
+    <footer class="footer"><span>Gerado em 06/08/2026 às 14h35</span><span>Página 1 de 3</span></footer>
+  </section>
+
+  <section class="page technical">
+    <header class="technical-top"><div class="technical-brand"><img src="../../../web/icons/xsteam-mark.svg" alt="Logo XSTEAM">XSTEAM · AVALIAÇÃO FUNCIONAL</div><span class="technical-index">DADOS TÉCNICOS</span></header>
+    <div class="technical-heading"><p class="eyebrow">MARIA SILVA · 06/08/2026</p><h1 class="title">Detalhamento técnico</h1></div>
+    <div class="technical-content"><div class="domain">MOBILIDADE E EQUILÍBRIO</div>
+      <article class="tech"><h3>Teste de caminhada de 4 metros</h3><div class="tech-value">5,8 s</div><p><b>Tentativas:</b> 6,1 s · 5,8 s</p><p><b>Critério:</b> menor tempo entre duas tentativas.</p><p><b>Referência:</b> quando definida para o teste.</p></article>
+      <article class="tech"><h3>SPPB</h3><div class="tech-value">9/12</div><p><b>Componentes:</b> caminhada 4 m, levantar da cadeira e equilíbrio.</p><p><b>Detalhe:</b> escores por componente no registro técnico.</p></article>
+      <article class="tech"><h3>2-Minute Step Test</h3><div class="tech-value">81 elevações</div><p><b>Registro:</b> elevações do joelho direito em dois minutos.</p><p><b>Referência:</b> conforme regra de idade e sexo.</p></article>
+    </div>
+    <footer class="footer"><span>Gerado em 06/08/2026 às 14h35</span><span>Página 2 de 3</span></footer>
+  </section>
+
+  <section class="page technical">
+    <header class="technical-top"><div class="technical-brand"><img src="../../../web/icons/xsteam-mark.svg" alt="Logo XSTEAM">XSTEAM · AVALIAÇÃO FUNCIONAL</div><span class="technical-index">DADOS TÉCNICOS</span></header>
+    <div class="technical-content"><div class="domain">FORÇA E FLEXIBILIDADE</div>
+      <article class="tech"><h3>Extensão isométrica de joelho</h3><div class="tech-value">D 36 · E 33 kgf</div><p><b>Tentativas:</b> duas por lado; registrar a melhor.</p><p><b>Dispositivo:</b> dinamômetro de tensão.</p><p><b>Referência:</b> não cadastrada.</p></article>
+      <article class="tech"><h3>Remada isométrica</h3><div class="tech-value">D 29 · E 27 kgf</div><p><b>Tentativas:</b> duas por lado; registrar a melhor.</p><p><b>Dispositivo:</b> dinamômetro de tensão.</p><p><b>Referência:</b> não cadastrada.</p></article>
+      <article class="tech"><h3>Chair Sit-and-Reach</h3><div class="tech-value">D 8 · E 6 cm</div><p><b>Tentativas:</b> duas por lado; registrar a melhor distância.</p><p><b>Unidade:</b> centímetros.</p></article>
+      <section class="summary">Este relatório apoia o acompanhamento físico e não substitui avaliação médica. São exibidos somente testes concluídos e incluídos na geração do documento.</section>
+    </div>
+    <footer class="footer"><span>Gerado em 06/08/2026 às 14h35</span><span>Página 3 de 3</span></footer>
+  </section>
+</body>
+</html>
