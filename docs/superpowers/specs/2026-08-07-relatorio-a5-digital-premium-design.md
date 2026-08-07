@@ -8,7 +8,7 @@ Revisar o protótipo do relatório de avaliação funcional para leitura digital
 
 - O relatório usa a página inteira como superfície de leitura, com margens internas discretas.
 - A primeira página é um resumo convidativo para aluno e familiar; as páginas seguintes trazem o detalhamento técnico.
-- A logo colorida XSTEAM abre o documento em um cabeçalho premium e moderno, coerente com o PWA.
+- A logo colorida XSTEAM abre o documento em um cabeçalho premium e compacto, coerente com o PWA e sem dominar a primeira página.
 - O verde muito escuro organiza a marca; o amarelo-limão é reservado a acentos e à logo.
 - Os cartões de resultado ocupam mais espaço vertical e equilibram a primeira página.
 - Páginas técnicas usam fundo contínuo, títulos editoriais, cartões claros e uma marca d’água discreta.
@@ -24,10 +24,10 @@ O fundo claro preenche integralmente cada página. O conteúdo respeita uma áre
 
 ### Primeira página
 
-1. Cabeçalho de marca em toda a largura útil, com logo colorida, nome da marca e contexto “Avaliação”.
+1. Cabeçalho de marca compacto em toda a largura útil, com logo colorida menor, nome da marca e contexto “Avaliação” discreto.
 2. Título “Resumo da sessão” e breve explicação.
-3. Identificação do aluno, data da avaliação, última atualização e profissional responsável.
-4. Grade de resultados realizados, em cartões maiores e de leitura rápida.
+3. Identificação leve do aluno, data da avaliação, última atualização e profissional responsável, sem o rótulo redundante “Prontuário funcional”.
+4. Grade de resultados realizados, em cartões de leitura rápida, com bordas e sombras mais discretas e maior ênfase nos valores.
 5. Observações do profissional, quando preenchidas.
 6. Rodapé sutil com data/hora de geração e página.
 

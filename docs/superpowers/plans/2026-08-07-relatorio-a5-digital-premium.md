@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Atualizar o protótipo A5 para uma experiência digital premium, sem área editorial estreita, com melhor aproveitamento de tela e sem o rótulo interno “denso”.
+**Goal:** Atualizar o protótipo A5 para uma experiência digital premium, sem área editorial estreita, com melhor aproveitamento de tela, sem o rótulo interno “denso” e com abertura de marca compacta.
 
 **Architecture:** O arquivo HTML de protótipo continua sendo a fonte única de diagramação. A exportação via Chrome headless produz o PDF A5 estático; validações de metadados e renderizações PNG confirmam tamanho, páginas, ausência de cabeçalhos do navegador e legibilidade visual.
 
@@ -43,14 +43,14 @@ body { background: #e9eeea; }
 Manter a logo colorida e aplicar uma barra escura com hierarquia de marca:
 
 ```css
-.hero { min-height: 35mm; border-radius: 5mm; padding: 5mm; background: linear-gradient(135deg, #06140f, #102c20); }
-.hero-logo { width: 12mm; height: 12mm; }
+.hero { min-height: 25mm; border-radius: 4mm; padding: 3.5mm; background: linear-gradient(135deg, #06140f, #102c20); }
+.hero-logo { width: 9mm; height: 9mm; }
 .hero-kicker { color: #dffb45; font-size: 7pt; font-weight: 800; letter-spacing: .13em; }
 ```
 
 - [x] **Step 3: Distribuir a primeira página verticalmente**
 
-Usar uma grade de dois campos para os seis resultados e permitir que os cartões cresçam dentro do espaço disponível:
+Usar uma grade de dois campos para os seis resultados, removendo o rótulo redundante “Prontuário funcional” e reduzindo bordas/sombras para dar prioridade aos valores:
 
 ```css
 .summary-page { display: flex; flex-direction: column; }

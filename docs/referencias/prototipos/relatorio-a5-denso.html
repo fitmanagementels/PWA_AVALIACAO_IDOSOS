@@ -14,28 +14,28 @@
     .technical::before { content: ''; position: absolute; right: -8mm; bottom: 15mm; width: 53mm; height: 53mm; opacity: .045; background: url('../../../web/icons/xsteam-mark.svg') center / contain no-repeat; filter: grayscale(1); }
     .technical > * { position: relative; z-index: 1; }
 
-    .hero { min-height: 35mm; display: flex; align-items: center; justify-content: space-between; gap: 4mm; padding: 5mm; border-radius: 5mm; color: #f5faf6; background: linear-gradient(135deg, #06140f 0%, #0b2118 62%, #183b2a 100%); box-shadow: 0 3mm 9mm rgba(7, 29, 19, .12); }
-    .hero-brand { display: flex; align-items: center; gap: 3.2mm; min-width: 0; }
-    .hero-logo { width: 13mm; height: 13mm; flex: 0 0 13mm; }
-    .hero-name { font-size: 13.2pt; font-weight: 800; letter-spacing: .12em; }
-    .hero-sub { margin-top: 1mm; color: #bdcfc5; font-size: 7.5pt; }
-    .hero-pill { flex: 0 0 auto; padding: 1.6mm 2.5mm; border: 1px solid rgba(223, 251, 69, .36); border-radius: 9mm; color: #dffb45; font-size: 6.8pt; font-weight: 800; letter-spacing: .09em; }
+    .hero { min-height: 25mm; display: flex; align-items: center; justify-content: space-between; gap: 3mm; padding: 3.5mm; border-radius: 4mm; color: #f5faf6; background: linear-gradient(135deg, #06140f 0%, #0b2118 62%, #183b2a 100%); box-shadow: 0 1.8mm 5mm rgba(7, 29, 19, .08); }
+    .hero-brand { display: flex; align-items: center; gap: 2.5mm; min-width: 0; }
+    .hero-logo { width: 9mm; height: 9mm; flex: 0 0 9mm; }
+    .hero-name { font-size: 11.2pt; font-weight: 800; letter-spacing: .12em; }
+    .hero-sub { margin-top: .7mm; color: #bdcfc5; font-size: 6.8pt; }
+    .hero-pill { flex: 0 0 auto; color: #dffb45; font-size: 6.5pt; font-weight: 800; letter-spacing: .1em; }
 
-    .intro { margin: 5mm 0 0; }
+    .intro { margin: 4mm 0 0; }
     .eyebrow { margin: 0 0 1.7mm; color: #4b6b5e; font-size: 7.3pt; font-weight: 800; letter-spacing: .12em; }
     .title { margin: 0; font-size: 21pt; line-height: 1.02; letter-spacing: -.05em; }
     .subtitle { margin: 1.8mm 0 0; color: #4d6b60; font-size: 9pt; }
-    .identity { margin-top: 4.2mm; display: flex; justify-content: space-between; align-items: center; gap: 3mm; padding: 3.6mm 4mm; border: 1px solid #c8d9cf; border-left: 1.4mm solid #dffb45; border-radius: 3.2mm; background: rgba(227, 237, 231, .88); }
+    .identity { margin-top: 3.5mm; display: flex; align-items: center; padding: 3mm 3.5mm; border: 1px solid #c8d9cf; border-left: 1.1mm solid #dffb45; border-radius: 3mm; background: rgba(227, 237, 231, .82); }
     .identity-name { display: block; font-size: 11.5pt; font-weight: 800; }
     .identity-meta { display: block; margin-top: 1mm; color: #4c6a5f; font-size: 7.7pt; }
-    .identity-status { flex: 0 0 auto; color: #2c5d45; font-size: 6.6pt; font-weight: 800; letter-spacing: .07em; text-align: right; }
+    .identity-status { display: none; }
 
     .results-section { min-height: 0; flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 4.7mm; }
     .section-title, .domain { margin: 0 0 2.4mm; color: #49695c; font-size: 7.8pt; font-weight: 800; letter-spacing: .12em; }
-    .result-grid { height: 66mm; flex: 0 0 66mm; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3mm; }
-    .result { min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 2.7mm; overflow: hidden; border: 1px solid #c5d8cd; border-radius: 4mm; background: rgba(255, 255, 255, .84); box-shadow: 0 1.5mm 3.5mm rgba(26, 60, 41, .045); }
+    .result-grid { height: 72mm; flex: 0 0 72mm; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 3mm; }
+    .result { min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 2.7mm; overflow: hidden; border: 1px solid #d0ded6; border-radius: 3.5mm; background: rgba(255, 255, 255, .82); box-shadow: 0 .7mm 1.8mm rgba(26, 60, 41, .025); }
     .result h3 { margin: 0 0 1.1mm; font-size: 8.8pt; line-height: 1.14; }
-    .value { font-size: 15.5pt; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+    .value { font-size: 16.5pt; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
     .value.compact { font-size: 12pt; }
     .tag { align-self: flex-start; display: inline-block; margin-top: 1.2mm; padding: .7mm 1.5mm; border-radius: 9mm; background: #e7efe9; color: #36564a; font-size: 6.4pt; font-weight: 800; }
     .tag.neutral { background: #edf0ee; color: #68796f; }
@@ -50,7 +50,7 @@
     .technical-heading .eyebrow { margin-bottom: 1.3mm; }
     .technical-heading .title { font-size: 19pt; }
     .technical-content { min-height: 0; flex: 1; display: flex; flex-direction: column; margin-top: 4.5mm; }
-    .domain { margin-bottom: 2.7mm; }
+    .domain { margin-bottom: 2.7mm; padding-left: 2mm; border-left: .8mm solid #dffb45; }
     .tech { min-height: 0; flex: 1; margin-bottom: 2.8mm; padding: 4mm; border: 1px solid #c5d8cd; border-radius: 4mm; background: rgba(255, 255, 255, .78); box-shadow: 0 1.5mm 3.5mm rgba(26, 60, 41, .04); break-inside: avoid; }
     .tech h3 { margin: 0 0 1.8mm; font-size: 10pt; }.tech-value { margin-bottom: 1.5mm; font-size: 15pt; font-weight: 800; letter-spacing: -.035em; }.tech p { margin: 1.2mm 0 0; font-size: 8.2pt; }.tech b { color: #3b5d4e; }
     .summary { margin-top: .2mm; padding: 3.4mm 4mm; border: 1px solid #c5d8cd; border-radius: 3mm; background: #e4ede7; font-size: 7.8pt; }
@@ -64,7 +64,7 @@
       <div class="hero-pill">AVALIAÇÃO</div>
     </header>
     <div class="intro"><p class="eyebrow">RELATÓRIO DE AVALIAÇÃO FUNCIONAL</p><h1 class="title">Resumo da sessão</h1><p class="subtitle">Resultados objetivos dos testes concluídos.</p></div>
-    <div class="identity"><div><span class="identity-name">Maria Silva · 72 anos</span><span class="identity-meta">Avaliação em 06/08/2026 · Atualizado às 14h30 · Responsável: Elohim Lima</span></div><span class="identity-status">PRONTUÁRIO<br>FUNCIONAL</span></div>
+    <div class="identity"><div><span class="identity-name">Maria Silva · 72 anos</span><span class="identity-meta">Avaliação em 06/08/2026 · Atualizado às 14h30 · Responsável: Elohim Lima</span></div></div>
     <section class="results-section"><h2 class="section-title">RESULTADOS REALIZADOS</h2><div class="result-grid">
       <article class="result"><h3>Caminhada 4 m</h3><div class="value">5,8 s</div><span class="tag">Referência</span></article><article class="result"><h3>SPPB</h3><div class="value">9/12</div><span class="tag">Escore</span></article>
       <article class="result"><h3>2-Minute Step</h3><div class="value">81</div><span class="tag">elevações</span></article><article class="result"><h3>Extensão joelho</h3><div class="value compact">D 36 · E 33 kgf</div><span class="tag neutral">Sem referência</span></article>
