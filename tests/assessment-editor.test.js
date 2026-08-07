@@ -18,6 +18,11 @@ test('keeps global save based on accumulated local test draft inputs', () => {
   assert.doesNotMatch(source, /request\(/);
 });
 
+test('passes the clicked test id to the local detail sheet', () => {
+  assert.match(source, /openTestSheet\(\{[\s\S]*?testId: id,/);
+  assert.doesNotMatch(source, /\n\s+testId,\n\s+definition,/);
+});
+
 test('restores focus to the rebuilt test card after closing its sheet', () => {
   assert.match(source, /root\.querySelector\(`\[data-open-test=/);
   assert.match(source, /replacement\?\.focus\(\)/);

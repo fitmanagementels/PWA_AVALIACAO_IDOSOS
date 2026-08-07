@@ -41,7 +41,7 @@ export function renderAssessmentEditor(root, assessment, onBack) {
     const fields = testFieldsMarkup({ testId: id, definition, draftInputs: assessment.draftInputs });
     openTestSheet({
       origin,
-      testId,
+      testId: id,
       definition,
       draftInputs: assessment.draftInputs,
       fields,
