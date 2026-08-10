@@ -50,6 +50,47 @@ function classificationForSavedResult_(result, person, assessmentDate, reference
   return classification || result.classificacao || '';
 }
 
+function backScratchReferenceRecord_() {
+  return {
+    referenciaId: 'ref-back-scratch-v1',
+    testeId: 'back-scratch',
+    versao: 1,
+    criteriosJson: JSON.stringify({
+      modelo: 'faixas-por-sexo-e-idade',
+      unidade: 'cm',
+      aplicarPorLado: true,
+      rotulos: { abaixo: 'Abaixo da média', normal: 'Normal', acima: 'Acima da média' },
+      faixas: [
+        { sexo: 'masculino', idadeMin: 60, idadeMax: 64, normalMin: -16.5, normalMax: 0 },
+        { sexo: 'masculino', idadeMin: 65, idadeMax: 69, normalMin: -19.1, normalMax: -2.5 },
+        { sexo: 'masculino', idadeMin: 70, idadeMax: 74, normalMin: -20.3, normalMax: -2.5 },
+        { sexo: 'masculino', idadeMin: 75, idadeMax: 79, normalMin: -22.9, normalMax: -5.1 },
+        { sexo: 'masculino', idadeMin: 80, idadeMax: 84, normalMin: -24.1, normalMax: -5.1 },
+        { sexo: 'masculino', idadeMin: 85, idadeMax: 89, normalMin: -25.4, normalMax: -7.6 },
+        { sexo: 'masculino', idadeMin: 90, idadeMax: 94, normalMin: -26.7, normalMax: -10.2 },
+        { sexo: 'feminino', idadeMin: 60, idadeMax: 64, normalMin: -7.6, normalMax: 3.8 },
+        { sexo: 'feminino', idadeMin: 65, idadeMax: 69, normalMin: -8.9, normalMax: 3.8 },
+        { sexo: 'feminino', idadeMin: 70, idadeMax: 74, normalMin: -10.2, normalMax: 2.5 },
+        { sexo: 'feminino', idadeMin: 75, idadeMax: 79, normalMin: -12.7, normalMax: 1.3 },
+        { sexo: 'feminino', idadeMin: 80, idadeMax: 84, normalMin: -14, normalMax: 0 },
+        { sexo: 'feminino', idadeMin: 85, idadeMax: 89, normalMin: -17.8, normalMax: -2.5 },
+        { sexo: 'feminino', idadeMin: 90, idadeMax: 94, normalMin: -20.3, normalMax: -2.5 }
+      ],
+      fonte: 'Tabela de referência fornecida pelo responsável do projeto em 10/08/2026'
+    }),
+    classificacao: 'qualitativa-3-faixas',
+    vigencia: '2026-08-10'
+  };
+}
+
+function seedBackScratchReference() {
+  return withLock_(function() {
+    const record = backScratchReferenceRecord_();
+    updateRowById_(SHEETS.REFERENCES, 'referenciaId', record);
+    return jsonOk_(record);
+  });
+}
+
 function saveAssessment(payload) { return withLock_(function() { validateAssessment_(payload); const now = new Date().toISOString(); const person = getRows_(SHEETS.PEOPLE).find(function(item) { return item.pessoaId === payload.pessoaId; }) || null; const referenceRows = getRows_(SHEETS.REFERENCES); const record = { avaliacaoId: payload.avaliacaoId, pessoaId: payload.pessoaId, data: payload.data, profissionalNome: payload.profissionalNome, status: 'rascunho', testesSelecionados: JSON.stringify(payload.testesSelecionados), notasTestes: payload.notasTestes || '', observacoesAluno: payload.observacoesAluno || '', criadoEm: payload.criadoEm || now, ultimaAtualizacao: now }; updateRowById_(SHEETS.ASSESSMENTS, 'avaliacaoId', record); const summaryResults = []; (payload.resultados || []).forEach(function(result) { const resultRecord = { resultadoId: result.resultadoId || Utilities.getUuid(), avaliacaoId: record.avaliacaoId, testeId: result.testeId, status: result.status, lado: result.lado || '', valorOficial: fieldOrBlank_(result.valorOficial), unidade: result.unidade || '', classificacao: classificationForSavedResult_(result, person, payload.data, referenceRows), protocoloVersao: result.protocoloVersao || 1, motivoNaoConcluido: result.motivoNaoConcluido || '' }; summaryResults.push(resultRecord); updateRowById_(SHEETS.RESULTS, 'resultadoId', resultRecord); (result.tentativas || []).forEach(function(attempt) { updateRowById_(SHEETS.ATTEMPTS, 'tentativaId', { tentativaId: attempt.tentativaId || Utilities.getUuid(), resultadoId: resultRecord.resultadoId, ordem: attempt.ordem, lado: attempt.lado || '', valor: fieldOrBlank_(attempt.valor), unidade: attempt.unidade, valida: attempt.valida !== false, criadoEm: now }); }); }); updateHistorySummary_(record, summaryResults); return jsonOk_({ avaliacaoId: record.avaliacaoId, ultimaAtualizacao: now }); }); }
 function assessmentCanComplete_(payload) { const selected = payload.testesSelecionados || []; const results = payload.resultados || []; if (selected.some(function(id) { return !results.some(function(result) { return result.testeId === id; }); })) throw new Error('Preencha ou informe o motivo para todos os testes selecionados'); results.forEach(function(result) { if (result.status === 'naoConcluido' && !String(result.motivoNaoConcluido || '').trim()) throw new Error('Informe o motivo do teste não concluído'); }); }
 function completeAssessment(payload) { assessmentCanComplete_(payload); const saved = saveAssessment(payload); if (!saved.ok) return saved; return withLock_(function() { const assessment = getRows_(SHEETS.ASSESSMENTS).find(function(row) { return row.avaliacaoId === payload.avaliacaoId; }); assessment.status = 'concluida'; assessment.ultimaAtualizacao = new Date().toISOString(); updateRowById_(SHEETS.ASSESSMENTS, 'avaliacaoId', assessment); updateHistorySummary_(assessment, getRows_(SHEETS.RESULTS).filter(function(result) { return result.avaliacaoId === assessment.avaliacaoId; })); return jsonOk_(assessment); }); }

@@ -76,6 +76,18 @@ test('uses the Back Scratch reference for each saved bilateral result', () => {
   assert.equal(classificationForSavedResult({ testeId: 'back-scratch', status: 'naoConcluido', valorOficial: -14, unidade: 'cm', classificacao: 'preservar' }, person, '2026-08-10', rows), 'preservar');
 });
 
+test('builds the exact active Back Scratch reference record', () => {
+  const record = backendHelper('backScratchReferenceRecord_')();
+  const criteria = JSON.parse(record.criteriosJson);
+  assert.deepEqual(
+    { id: record.referenciaId, test: record.testeId, version: record.versao, kind: record.classificacao, start: record.vigencia },
+    { id: 'ref-back-scratch-v1', test: 'back-scratch', version: 1, kind: 'qualitativa-3-faixas', start: '2026-08-10' }
+  );
+  assert.equal(criteria.faixas.length, 14);
+  assert.deepEqual(criteria.faixas[0], { sexo: 'masculino', idadeMin: 60, idadeMax: 64, normalMin: -16.5, normalMax: 0 });
+  assert.deepEqual(criteria.faixas.at(-1), { sexo: 'feminino', idadeMin: 90, idadeMax: 94, normalMin: -20.3, normalMax: -2.5 });
+});
+
 test('declares a compact history summary sheet for fast person lookups', () => {
   const source = fs.readFileSync('apps-script/00_Config.gs', 'utf8');
   assert.match(source, /HISTORY_SUMMARIES: 'HistoricoResumo'/);
