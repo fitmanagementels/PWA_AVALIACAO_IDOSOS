@@ -5,12 +5,13 @@ import { buildAttendanceItems } from './attendance-center.js';
 import { defaultReportTestIds } from './report-selection.js';
 import { formatDateBr } from '../date-format.js';
 import { filterHistory, readHistoryCache, writeHistoryCache } from '../history-cache.js';
-import { queueMutation } from '../storage.js';
+import { hasPendingAssessmentMutation, queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, historySummaryFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
 import { request } from '../api-client.js';
 import { bindSelectionSummary, selectionCardsMarkup } from './selection-controls.js';
 import { bindXsteamSelects, validateXsteamSelects, xsteamSelectMarkup } from './xsteam-select.js';
 import { isCurrentNavigation, startNavigation } from '../navigation-guard.js';
+import { renderReportPreview } from './report-preview.js';
 const key = 'avaliacao-idosos-people';
 const testName = (id) => TESTS.find(([testId]) => testId === id)?.[1] || id;
 const read = () => JSON.parse(localStorage.getItem(key) || '[]');
@@ -46,6 +47,9 @@ function localAssessmentRecords() {
   return Object.keys(localStorage).filter((storageKey) => storageKey.startsWith('assessment:')).map((storageKey) => {
     try { return JSON.parse(localStorage.getItem(storageKey)); } catch (_) { return null; }
   }).filter(Boolean);
+}
+function readLocalAssessment(id) {
+  try { return JSON.parse(localStorage.getItem(`assessment:${id}`) || 'null'); } catch (_) { return null; }
 }
 function attendanceRowMarkup({ person, kind, draft, history }) {
   const profile = `${formatDateBr(person.birthDate)} · ${person.sex}`;
@@ -128,7 +132,11 @@ function historyMonthLabel(key) {
 async function renderAssessmentHistory(root, person, assessmentId, onBack = () => renderHistory(root, person), navigation = startNavigation('assessment-history')) {
   try {
     const response = await request('getAssessment', { avaliacaoId: assessmentId }, 'GET');
-    const assessment = assessmentFromApi(response.data.assessment);
+    const assessment = {
+      ...assessmentFromApi(response.data.assessment),
+      updatedAt: response.data.assessment.ultimaAtualizacao || '',
+      studentObservations: response.data.assessment.observacoesAluno || ''
+    };
     const results = response.data.results;
     if (!isCurrentNavigation(navigation)) return;
     root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO SALVA</p><h1>${formatDateBr(assessment.date)}</h1><p>${assessment.professionalName} · ${assessment.status}</p></div><button class="secondary" data-back>Voltar</button></section><section class="list">${results.length ? results.map((result) => `<article class="empty-state"><strong>${testName(result.testeId)}${result.lado ? ` · ${result.lado}` : ''}</strong><p>${result.status === 'naoConcluido' ? `Não concluído: ${result.motivoNaoConcluido}` : `${result.valorOficial} ${result.unidade}${result.classificacao ? ` · ${result.classificacao}` : ''}`}</p></article>`).join('') : '<article class="empty-state"><p>Sem resultados registrados.</p></article>'}</section><section class="action-grid"><button class="secondary" data-edit>Editar e complementar</button><button data-report>Exportar relatório PDF</button></section><p class="form-message"></p>`;
@@ -139,15 +147,36 @@ async function renderAssessmentHistory(root, person, assessmentId, onBack = () =
       startNavigation('assessment-editor');
       renderAssessmentEditor(root, editable, () => renderAssessmentHistory(root, person, assessment.id, onBack));
     };
-    root.querySelector('[data-report]').onclick = () => {
-      const selected = defaultReportTestIds(results);
+    root.querySelector('[data-report]').onclick = async () => {
+      const pending = await hasPendingAssessmentMutation(assessment.id);
+      if (!isCurrentNavigation(navigation)) return;
+      const local = readLocalAssessment(assessment.id);
+      const reportAssessment = pending && local ? { ...assessment, ...local } : assessment;
+      const reportResults = pending && local?.results?.length ? local.results : results;
+      const selected = defaultReportTestIds(reportResults);
+      if (!selected.length) {
+        root.querySelector('.form-message').textContent = 'Não há testes concluídos para incluir no relatório.';
+        return;
+      }
+      const selectedItems = selected.map((id) => [id, testName(id)]);
       const target = root.querySelector('.action-grid');
-      target.innerHTML = `<form class="form-card report-selection"><strong>Testes no relatório</strong><p class="selection-summary" data-selection-summary="report"></p><div class="selection-list">${selectionCardsMarkup({ name: 'includedTestIds', items: assessment.testIds.map((id) => [id, testName(id)]), selectedIds: selected })}</div><button data-selection-action="report">Gerar relatório PDF</button></form>`;
+      target.innerHTML = `<form class="form-card report-selection"><strong>Testes no relatório</strong><p class="selection-summary" data-selection-summary="report"></p><div class="selection-list">${selectionCardsMarkup({ name: 'includedTestIds', items: selectedItems, selectedIds: selected })}</div><section class="action-grid"><button data-selection-action="report">Ver prévia do relatório</button><button class="secondary" type="button" data-report-cancel>Cancelar</button></section></form>`;
       const reportForm = target.querySelector('form');
-      bindSelectionSummary(reportForm, { inputName: 'includedTestIds', summarySelector: '[data-selection-summary="report"]', buttonSelector: '[data-selection-action="report"]', idleLabel: 'Gerar relatório PDF' });
-      reportForm.onsubmit = async (event) => {
-        event.preventDefault(); const message = root.querySelector('.form-message'); message.textContent = 'Gerando relatório…';
-        try { const report = await request('generateReport', { avaliacaoId: assessment.id, includedTestIds: new FormData(event.currentTarget).getAll('includedTestIds') }); message.textContent = 'Relatório gerado. Abrindo arquivo…'; window.open(report.data.url, '_blank', 'noopener'); } catch (error) { message.textContent = error.message; }
+      bindSelectionSummary(reportForm, { inputName: 'includedTestIds', summarySelector: '[data-selection-summary="report"]', buttonSelector: '[data-selection-action="report"]', idleLabel: 'Ver prévia do relatório' });
+      target.querySelector('[data-report-cancel]').onclick = () => renderAssessmentHistory(root, person, assessment.id, onBack);
+      reportForm.onsubmit = (event) => {
+        event.preventDefault();
+        const includedTestIds = new FormData(event.currentTarget).getAll('includedTestIds');
+        if (!includedTestIds.length) return;
+        startNavigation('report-preview');
+        renderReportPreview(root, {
+          person,
+          assessment: reportAssessment,
+          results: reportResults,
+          includedTestIds,
+          isPendingSync: pending,
+          onBack: () => renderAssessmentHistory(root, person, assessment.id, onBack)
+        });
       };
     };
   } catch (error) {

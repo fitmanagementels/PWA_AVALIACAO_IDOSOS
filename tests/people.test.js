@@ -29,6 +29,20 @@ test('uses premium selection controls for the new assessment and PDF report', ()
   assert.match(source, /data-selection-action="report"/);
 });
 
+test('opens the local adaptive preview rather than the legacy report endpoint', () => {
+  const source = fs.readFileSync('web/js/views/people.js', 'utf8');
+
+  assert.match(source, /renderReportPreview/);
+  assert.match(source, /hasPendingAssessmentMutation/);
+  assert.doesNotMatch(source, /request\('generateReport'/);
+});
+
+test('builds the report selection only from concluded result identifiers', () => {
+  const source = fs.readFileSync('web/js/views/people.js', 'utf8');
+
+  assert.match(source, /const selectedItems = selected\.map\(\(id\) => \[id, testName\(id\)\]\);/);
+});
+
 test('uses the reusable XSTEAM select for sex, professional and history filter', () => {
   const source = fs.readFileSync('web/js/views/people.js', 'utf8');
   assert.match(source, /xsteamSelectMarkup/);
