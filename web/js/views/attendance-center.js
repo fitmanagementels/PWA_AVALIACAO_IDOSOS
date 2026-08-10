@@ -8,13 +8,22 @@ export function buildAttendanceItems(people, assessments, historiesByPerson) {
       assessments.filter((item) => item.personId === person.id && item.status === 'rascunho'),
       'updatedAt',
     );
-    const history = newest(historiesByPerson[person.id] || [], 'date');
+    const remoteDraft = person.flow?.rascunhoAtivo || null;
+    const remoteCompleted = person.flow?.ultimaConcluida ? {
+      assessmentId: person.flow.ultimaConcluida.avaliacaoId,
+      date: person.flow.ultimaConcluida.data,
+      professionalName: person.flow.ultimaConcluida.profissionalNome,
+      status: person.flow.ultimaConcluida.status,
+      testIds: []
+    } : null;
+    const history = newest([...(historiesByPerson[person.id] || []), ...(remoteCompleted ? [remoteCompleted] : [])], 'date');
 
     return {
       person,
-      kind: draft ? 'draft' : history ? 'history' : 'empty',
+      kind: draft ? 'draft' : remoteDraft ? 'remote-draft' : history ? 'history' : 'empty',
       draft,
-      history: draft ? null : history,
+      remoteDraft,
+      history,
     };
   });
 }

@@ -10,7 +10,7 @@ const SHEETS = {
   PROTOCOLS: 'Protocolos'
 };
 
-const ASSESSMENT_STATUS = ['rascunho', 'pendenteDeSincronizacao', 'concluida'];
+const ASSESSMENT_STATUS = ['rascunho', 'pendenteDeSincronizacao', 'concluida', 'arquivada'];
 const RESULT_STATUS = ['concluido', 'naoConcluido'];
 
 const PROFESSIONALS = ['Elohim', 'Victor', 'Lucas', 'Carlos Eduardo'];

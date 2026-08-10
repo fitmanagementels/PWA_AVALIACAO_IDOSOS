@@ -108,3 +108,27 @@ test('initializes the history summary before reading it', () => {
   assert.match(source, /function getHistorySummary\(params\) \{ ensureHistorySummary_\(\);/);
   assert.match(source, /function ensureHistorySummary_\(\)/);
 });
+
+test('distinguishes an active draft from the latest completed assessment for one person', () => {
+  const assessmentFlow = backendHelper('assessmentFlow_');
+  const flow = assessmentFlow([
+    { avaliacaoId: 'draft-old', pessoaId: 'p-1', data: '2026-08-01', profissionalNome: 'Ana', status: 'rascunho', ultimaAtualizacao: '2026-08-01T08:00:00Z' },
+    { avaliacaoId: 'complete-new', pessoaId: 'p-1', data: '2026-08-04', profissionalNome: 'Ana', status: 'concluida', ultimaAtualizacao: '2026-08-04T10:00:00Z' },
+    { avaliacaoId: 'archived', pessoaId: 'p-1', data: '2026-08-05', profissionalNome: 'Ana', status: 'arquivada', ultimaAtualizacao: '2026-08-05T10:00:00Z' },
+  ], 'p-1');
+
+  assert.deepEqual(flow.rascunhoAtivo, { avaliacaoId: 'draft-old', data: '2026-08-01', profissionalNome: 'Ana', status: 'rascunho', ultimaAtualizacao: '2026-08-01T08:00:00Z' });
+  assert.deepEqual(flow.ultimaConcluida, { avaliacaoId: 'complete-new', data: '2026-08-04', profissionalNome: 'Ana', status: 'concluida', ultimaAtualizacao: '2026-08-04T10:00:00Z' });
+});
+
+test('declares archival and active-draft protection in the assessment API', () => {
+  const config = fs.readFileSync('apps-script/00_Config.gs', 'utf8');
+  const webApp = fs.readFileSync('apps-script/01_WebApp.gs', 'utf8');
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(config, /'arquivada'/);
+  assert.match(webApp, /getPersonFlow: getPersonFlow/);
+  assert.match(webApp, /archiveAssessment: archiveAssessment/);
+  assert.match(assessments, /ACTIVE_DRAFT_EXISTS/);
+  assert.match(assessments, /function archiveAssessment\(payload\)/);
+});

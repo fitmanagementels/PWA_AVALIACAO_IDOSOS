@@ -34,9 +34,13 @@ export function renderPeople(root) {
       const person = people.find((item) => item.id === button.dataset.resumeId);
       if (person) resumeLatestDraft(root, person);
     });
+    personList.querySelectorAll('[data-remote-resume-id]').forEach((button) => button.onclick = () => {
+      const person = people.find((item) => item.id === button.dataset.remoteResumeId);
+      if (person) resumeRemoteDraft(root, person, button.dataset.assessmentId);
+    });
     personList.querySelectorAll('[data-start-id]').forEach((button) => button.onclick = () => {
       const person = people.find((item) => item.id === button.dataset.startId);
-      if (person) renderStart(root, person);
+      if (person) startAssessmentFlow(root, person);
     });
   };
   renderList();
@@ -53,7 +57,9 @@ function readLocalAssessment(id) {
 }
 function attendanceRowMarkup({ person, kind, draft, history }) {
   const profile = `${formatDateBr(person.birthDate)} · ${person.sex}`;
-  if (kind === 'draft') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span class="state-chip neutral">Rascunho neste aparelho</span><button class="secondary" data-resume-id="${person.id}">Retomar rascunho</button></div></article>`;
+  const completed = history?.status === 'concluida' ? `<span>Última concluída: ${formatDateBr(history.date)}</span>` : '';
+  if (kind === 'draft') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span class="state-chip neutral">Rascunho neste aparelho</span>${completed}<button class="secondary" data-resume-id="${person.id}">Retomar rascunho</button></div></article>`;
+  if (kind === 'remote-draft') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span class="state-chip neutral">Avaliação em andamento</span>${completed}<button class="secondary" data-remote-resume-id="${person.id}" data-assessment-id="${person.flow.rascunhoAtivo.avaliacaoId}">Retomar avaliação</button></div></article>`;
   if (kind === 'history') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span>Última avaliação: ${formatDateBr(history.date)}</span><button class="secondary" data-id="${person.id}">Ver atendimento</button></div></article>`;
   return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span>Sem registro neste aparelho</span><button class="secondary" data-start-id="${person.id}">Nova avaliação</button></div></article>`;
 }
@@ -68,7 +74,12 @@ function renderPerson(root, id) {
   startNavigation('person');
   const person = read().find((item) => item.id === id); if (!person) return renderPeople(root); const link = whatsAppUrl(person.whatsapp);
   root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${formatDateBr(person.birthDate)} · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
-  root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => renderStart(root, person); root.querySelector('[data-resume]').onclick = () => resumeLatestDraft(root, person); root.querySelector('[data-history]').onclick = () => renderHistory(root, person);
+  root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => startAssessmentFlow(root, person); root.querySelector('[data-resume]').onclick = () => {
+    const localDraft = localAssessmentsFor(person.id).find((assessment) => assessment.status === 'rascunho' || assessment.status === 'pendenteDeSincronizacao');
+    if (localDraft) return resumeLatestDraft(root, person);
+    if (person.flow?.rascunhoAtivo) return renderActiveDraftNotice(root, person, person.flow.rascunhoAtivo);
+    alert('Nenhum rascunho em andamento para esta pessoa.');
+  }; root.querySelector('[data-history]').onclick = () => renderHistory(root, person);
 }
 
 function localAssessmentsFor(personId) {
@@ -79,6 +90,72 @@ function resumeLatestDraft(root, person) {
   if (!assessment) return alert('Nenhum rascunho neste aparelho. Consulte o histórico para avaliações já sincronizadas.');
   startNavigation('assessment-editor');
   renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id));
+}
+async function resumeRemoteDraft(root, person, assessmentId) {
+  try {
+    const response = await request('getAssessment', { avaliacaoId: assessmentId }, 'GET');
+    const loaded = assessmentFromApi(response.data.assessment);
+    const assessment = {
+      ...loaded,
+      personName: person.name,
+      personSex: person.sex,
+      personBirthDate: person.birthDate,
+      results: resultsFromApi(response.data.results),
+      testNotes: response.data.assessment.notasTestes || '',
+      studentObservations: response.data.assessment.observacoesAluno || '',
+      draftInputs: {
+        testNotes: response.data.assessment.notasTestes || '',
+        studentObservations: response.data.assessment.observacoesAluno || ''
+      }
+    };
+    localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(assessment));
+    startNavigation('assessment-editor');
+    renderAssessmentEditor(root, assessment, () => renderPerson(root, person.id));
+  } catch (error) {
+    root.querySelector('[data-person-list]')?.insertAdjacentHTML('beforebegin', `<p class="form-message">Não foi possível retomar o rascunho: ${String(error.message || error)}</p>`);
+  }
+}
+async function startAssessmentFlow(root, person) {
+  const localDraft = localAssessmentsFor(person.id).find((assessment) => assessment.status === 'rascunho' || assessment.status === 'pendenteDeSincronizacao');
+  if (localDraft) return resumeLatestDraft(root, person);
+  try {
+    const response = await request('getPersonFlow', { pessoaId: person.id }, 'GET');
+    person.flow = response.data;
+    write(read().map((item) => item.id === person.id ? person : item));
+    if (person.flow.rascunhoAtivo) return renderActiveDraftNotice(root, person, person.flow.rascunhoAtivo);
+  } catch (_) {
+    // Em modo offline, o backend continuará protegendo contra duplicidade quando a fila for enviada.
+  }
+  renderStart(root, person);
+}
+function renderActiveDraftNotice(root, person, activeDraft) {
+  const navigation = startNavigation('active-draft');
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">AVALIAÇÃO EM ANDAMENTO</p><h1>${person.name}</h1><p>Existe um rascunho de ${formatDateBr(activeDraft.data)}${activeDraft.profissionalNome ? ` · ${activeDraft.profissionalNome}` : ''}.</p></div><button class="secondary" data-back>Voltar</button></section><section class="form-card"><h2>Retome ou arquive antes de criar outra avaliação</h2><p class="muted">Isso evita avaliações duplicadas e mantém a finalização segura.</p><section class="action-grid"><button data-resume-active>Retomar avaliação em andamento</button><button class="secondary" data-archive-active>Arquivar rascunho</button></section><p class="form-message" aria-live="polite"></p></section>`;
+  const message = root.querySelector('.form-message');
+  const archive = root.querySelector('[data-archive-active]');
+  let awaitingArchiveConfirmation = false;
+  root.querySelector('[data-back]').onclick = () => renderPerson(root, person.id);
+  root.querySelector('[data-resume-active]').onclick = () => resumeRemoteDraft(root, person, activeDraft.avaliacaoId);
+  archive.onclick = async () => {
+    if (!awaitingArchiveConfirmation) {
+      awaitingArchiveConfirmation = true;
+      archive.textContent = 'Confirmar arquivamento';
+      message.textContent = 'O rascunho continuará registrado, mas deixará de aparecer como avaliação em andamento.';
+      return;
+    }
+    archive.disabled = true;
+    try {
+      const response = await request('archiveAssessment', { avaliacaoId: activeDraft.avaliacaoId });
+      if (!response.ok) throw response.error || new Error('Não foi possível arquivar o rascunho');
+      if (!isCurrentNavigation(navigation)) return;
+      person.flow = { ...person.flow, rascunhoAtivo: null };
+      write(read().map((item) => item.id === person.id ? person : item));
+      renderStart(root, person);
+    } catch (error) {
+      archive.disabled = false;
+      message.textContent = error.message || 'Não foi possível arquivar o rascunho.';
+    }
+  };
 }
 async function renderHistory(root, person) {
   const navigation = startNavigation('history');

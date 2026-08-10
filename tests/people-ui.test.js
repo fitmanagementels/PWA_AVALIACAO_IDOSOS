@@ -16,6 +16,13 @@ test('central derives local summaries while retaining the people navigation toke
   assert.match(source, /data-resume-id/);
 });
 
+test('prevents a silent second draft and offers an explicit archive path', () => {
+  assert.match(source, /function startAssessmentFlow\(/);
+  assert.match(source, /function renderActiveDraftNotice\(/);
+  assert.match(source, /archiveAssessment/);
+  assert.match(source, /Retomar avaliação em andamento/);
+});
+
 test('assessment and history use the ready state and grouped existing timeline', () => {
   assert.match(source, /data-selection-ready/);
   assert.match(source, /groupHistoryByMonth/);

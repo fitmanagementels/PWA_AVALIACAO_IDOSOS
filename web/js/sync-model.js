@@ -20,7 +20,8 @@ export function personFromApi(person) {
     name: person.nomeCompleto,
     birthDate: person.dataNascimento,
     sex: person.sexo,
-    whatsapp: person.whatsApp || ''
+    whatsapp: person.whatsApp || '',
+    ...(person.fluxo ? { flow: person.fluxo } : {})
   };
 }
 

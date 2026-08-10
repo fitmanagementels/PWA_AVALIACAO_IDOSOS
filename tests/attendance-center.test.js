@@ -14,7 +14,7 @@ test('prioritizes the newest local draft without creating a clinical status', ()
 
   assert.equal(item.kind, 'draft');
   assert.equal(item.draft.id, 'new');
-  assert.equal(item.history, null);
+  assert.equal(item.history.assessmentId, 'saved');
 });
 
 test('uses only the latest cached history when no local draft exists', () => {
@@ -29,4 +29,16 @@ test('uses only the latest cached history when no local draft exists', () => {
 
   assert.equal(item.kind, 'history');
   assert.equal(item.history.assessmentId, 'latest');
+});
+
+test('keeps an active draft visible alongside the latest completed assessment', () => {
+  const [item] = buildAttendanceItems(
+    [{ id: 'p-3', name: 'Clara', flow: { rascunhoAtivo: { avaliacaoId: 'draft', data: '2026-08-09', status: 'rascunho' }, ultimaConcluida: { avaliacaoId: 'done', data: '2026-08-10', status: 'concluida' } } }],
+    [],
+    { 'p-3': [] },
+  );
+
+  assert.equal(item.kind, 'remote-draft');
+  assert.equal(item.remoteDraft.avaliacaoId, 'draft');
+  assert.equal(item.history.assessmentId, 'done');
 });

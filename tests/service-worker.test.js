@@ -5,7 +5,7 @@ import test from 'node:test';
 test('installs a new cache version and removes the obsolete application shell', () => {
   const source = fs.readFileSync('web/sw.js', 'utf8');
 
-  assert.match(source, /const CACHE = 'avaliacao-idosos-v24';/);
+  assert.match(source, /const CACHE = 'avaliacao-idosos-v25';/);
   assert.match(source, /date-format\.js/);
   assert.match(source, /history-cache\.js/);
   assert.match(source, /result-presentation\.js/);
