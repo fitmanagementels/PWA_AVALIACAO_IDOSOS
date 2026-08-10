@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { replaceTestDraftInputs, testCardSummary, testInputNames } from '../web/js/test-inputs.js';
+import { draftInputsForTest, replaceTestDraftInputs, testCardSummary, testInputNames } from '../web/js/test-inputs.js';
 
 test('lists only the four bilateral attempt names for Back Scratch', () => {
   assert.deepEqual(testInputNames('back-scratch'), [
@@ -71,5 +71,24 @@ test('uses the persisted single-side value when the local draft was cleared', ()
     testId: 'step-2min', draftInputs: {}, result: { status: 'concluido', officialBySide: { unico: 84 } },
   }), {
     state: 'complete', text: '84 elevações', entered: 1, total: 1,
+  });
+});
+
+test('hydrates saved bilateral attempts into their editable fields without overwriting local changes', () => {
+  assert.deepEqual(draftInputsForTest({
+    testId: 'knee-extension-isometric',
+    draftInputs: { 'knee-extension-isometric-direito-2': '21' },
+    result: {
+      status: 'concluido',
+      attempts: [
+        { side: 'direito', value: 20, order: 1 }, { side: 'direito', value: 18, order: 2 },
+        { side: 'esquerdo', value: 19, order: 1 }, { side: 'esquerdo', value: 17, order: 2 },
+      ],
+    },
+  }), {
+    'knee-extension-isometric-direito-1': 20,
+    'knee-extension-isometric-direito-2': '21',
+    'knee-extension-isometric-esquerdo-1': 19,
+    'knee-extension-isometric-esquerdo-2': 17,
   });
 });

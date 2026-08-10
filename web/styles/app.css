@@ -99,6 +99,8 @@ main { max-width: 760px; margin: auto; padding: 28px 20px 116px; }
 
 /* Contextual test sheet: compact data entry over the assessment, with no remote wait. */
 .test-summary-list { display:grid; gap:10px; }
+.add-tests { display:grid; gap:12px; padding:14px; border:1px solid var(--border); border-radius:13px; background:var(--surface-overlay); }
+.add-tests summary { display:grid; gap:3px; cursor:pointer; list-style:none; }.add-tests summary::-webkit-details-marker { display:none; }.add-tests summary strong { color:var(--text-primary); }.add-tests summary small, .add-tests__empty { color:var(--text-secondary); font-size:.86rem; font-weight:600; }.add-tests__empty { margin:0; }
 .test-summary-card { width:100%; min-height:68px; display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:14px; padding:13px 15px; color:var(--text-primary); background:#0c1714; border:1px solid var(--border); border-left:6px solid #6a7a73; border-radius:13px; text-align:left; }
 .test-summary-card:hover { background:var(--surface-active); border-color:#426258; }
 .test-summary-card[data-state="green"] { border-left-color:#83cc82; }.test-summary-card[data-state="yellow"] { border-left-color:#e4bf48; }

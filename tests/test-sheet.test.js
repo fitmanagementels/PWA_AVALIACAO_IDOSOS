@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { testSheetMarkup } from '../web/js/views/test-sheet.js';
+import { testFieldsMarkup, testSheetMarkup } from '../web/js/views/test-sheet.js';
 
 test('renders an accessible sheet with a left visual placeholder and compact save action', () => {
   const markup = testSheetMarkup({
@@ -36,4 +36,14 @@ test('uses the existing SPPB form field names in dedicated compact groups', asyn
   }
   assert.match(source, /compact-number-field/);
   assert.match(source, /data-not-completed/);
+});
+
+test('keeps a saved zero visible when reopening a test form', () => {
+  const markup = testFieldsMarkup({
+    testId: 'step-2min',
+    definition: { unit: 'elevações', sides: ['unico'], attempts: 1 },
+    draftInputs: { 'step-2min-unico-1': 0 },
+  });
+
+  assert.match(markup, /name="step-2min-unico-1"[^>]* value="0"/);
 });

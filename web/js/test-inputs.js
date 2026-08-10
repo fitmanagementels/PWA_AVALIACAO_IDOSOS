@@ -28,6 +28,13 @@ export function replaceTestDraftInputs(draftInputs, testId, values) {
   return { ...next, ...values };
 }
 
+export function draftInputsForTest({ testId, draftInputs = {}, result = null }) {
+  const saved = savedInputsForResult(testId, result);
+  const names = new Set([...testInputNames(testId), `${testId}-not-completed`, `${testId}-reason`]);
+  const local = Object.fromEntries(Object.entries(draftInputs).filter(([name]) => names.has(name)));
+  return { ...saved, ...local };
+}
+
 export function testCardSummary({ testId, draftInputs = {}, result = null }) {
   const names = testInputNames(testId);
   const total = names.length;
@@ -61,6 +68,38 @@ function bestValue(testId, side, draftInputs, result) {
     .map((name) => Number(String(draftInputs[name]).replace(',', '.')))
     .filter(Number.isFinite);
   return Math.max(...values);
+}
+
+function savedInputsForResult(testId, result) {
+  if (!result) return {};
+  if (result.status === 'naoConcluido') {
+    return { [`${testId}-not-completed`]: 'on', [`${testId}-reason`]: result.reason || '' };
+  }
+  if (testId === 'sppb') return savedSppbInputs(result.attempts || []);
+
+  const definition = testDefinition(testId);
+  return definition.sides.reduce((inputs, side) => {
+    const attempts = (result.attempts || [])
+      .filter((attempt) => (attempt.side || 'unico') === side)
+      .sort((first, second) => (first.order || 0) - (second.order || 0));
+    attempts.slice(0, definition.attempts).forEach((attempt, index) => {
+      inputs[`${testId}-${side}-${index + 1}`] = attempt.value;
+    });
+    return inputs;
+  }, {});
+}
+
+function savedSppbInputs(attempts) {
+  const bySide = (side) => attempts
+    .filter((attempt) => attempt.side === side)
+    .sort((first, second) => (first.order || 0) - (second.order || 0));
+  const inputs = {};
+  bySide('caminhada4m').slice(0, 2).forEach((attempt, index) => { inputs[`sppb-gait-${index + 1}`] = attempt.value; });
+  const chair = bySide('sentarLevantar5x')[0];
+  const tandem = bySide('equilibrio')[0];
+  if (chair) inputs['sppb-chair'] = chair.value;
+  if (tandem) inputs['sppb-tandem'] = tandem.value;
+  return inputs;
 }
 
 function hasValue(value) {

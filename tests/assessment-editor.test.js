@@ -37,5 +37,6 @@ test('offers adding tests and manual completion', () => {
 test('uses premium cards for added tests while the detail sheet owns non-completed toggles', () => {
   assert.match(source, /selectionCardsMarkup\(\{ name: 'additionalTestIds'/);
   assert.match(source, /data-selection-summary="additional"/);
-  assert.match(source, /testFieldsMarkup/);
+  assert.match(source, /draftInputsForTest/);
+  assert.match(source, /Todos os \$\{TESTS\.length\} testes atualmente cadastrados/);
 });

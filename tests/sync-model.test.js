@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { assessmentForCreate, assessmentForSave, assessmentFromApi, measurementValue, personForSave, personFromApi } from '../web/js/sync-model.js';
+import { assessmentForCreate, assessmentForSave, assessmentFromApi, measurementValue, personForSave, personFromApi, resultsFromApi } from '../web/js/sync-model.js';
 
 test('does not turn an empty measurement field into zero', () => {
   assert.equal(measurementValue(''), null);
@@ -41,5 +41,25 @@ test('splits bilateral official values into individual result records', () => {
   assert.deepEqual(payload.resultados.map(({ testeId, lado, valorOficial, unidade }) => ({ testeId, lado, valorOficial, unidade })), [
     { testeId: 'knee-extension-isometric', lado: 'direito', valorOficial: 24, unidade: 'kgf' },
     { testeId: 'knee-extension-isometric', lado: 'esquerdo', valorOficial: 18, unidade: 'kgf' }
+  ]);
+});
+
+test('preserves saved attempts returned by Sheets when an assessment is reopened for editing', () => {
+  const [result] = resultsFromApi([
+    {
+      testeId: 'knee-extension-isometric', status: 'concluido', lado: 'direito', valorOficial: '20', unidade: 'kgf',
+      tentativas: [{ ordem: 1, valor: '20' }, { ordem: 2, valor: '18' }],
+    },
+    {
+      testeId: 'knee-extension-isometric', status: 'concluido', lado: 'esquerdo', valorOficial: '19', unidade: 'kgf',
+      tentativas: [{ ordem: 1, valor: '19' }, { ordem: 2, valor: '17' }],
+    },
+  ]);
+
+  assert.deepEqual(result.attempts, [
+    { side: 'direito', value: 20, order: 1 },
+    { side: 'direito', value: 18, order: 2 },
+    { side: 'esquerdo', value: 19, order: 1 },
+    { side: 'esquerdo', value: 17, order: 2 },
   ]);
 });

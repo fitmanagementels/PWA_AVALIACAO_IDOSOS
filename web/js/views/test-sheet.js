@@ -8,7 +8,7 @@ const SPPB_FIELDS = [
 ];
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
-const valueAttribute = (inputs, name) => ` value="${escapeHtml(inputs[name] || '')}"`;
+const valueAttribute = (inputs, name) => ` value="${escapeHtml(inputs[name] ?? '')}"`;
 const checkedAttribute = (inputs, name) => inputs[name] === 'on' ? ' checked' : '';
 
 export function testSheetMarkup({ testId, definition, fields, summary }) {

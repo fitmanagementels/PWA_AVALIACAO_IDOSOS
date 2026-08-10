@@ -57,8 +57,13 @@ export function resultsFromApi(rows) {
   const grouped = new Map();
   (rows || []).forEach((row) => {
     const item = grouped.get(row.testeId) || { testId: row.testeId, status: row.status, unit: row.unidade || '', attempts: [], officialBySide: {}, reason: row.motivoNaoConcluido || '' };
+    const side = row.lado || 'unico';
     item.status = row.status;
-    if (row.status === 'concluido') item.officialBySide[row.lado || 'unico'] = measurementValue(row.valorOficial);
+    if (row.status === 'concluido') item.officialBySide[side] = measurementValue(row.valorOficial);
+    (row.tentativas || []).forEach((attempt) => {
+      const value = measurementValue(attempt.valor);
+      if (value !== null) item.attempts.push({ side, value, order: Number(attempt.ordem) || item.attempts.length + 1 });
+    });
     if (row.motivoNaoConcluido) item.reason = row.motivoNaoConcluido;
     grouped.set(row.testeId, item);
   });

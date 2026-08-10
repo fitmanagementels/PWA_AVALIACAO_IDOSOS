@@ -4,9 +4,9 @@ import { presentationForResult, sessionColorCounts } from '../result-presentatio
 import { enqueueAssessmentMutation, saveDraft } from '../storage.js';
 import { assessmentForSave, measurementValue } from '../sync-model.js';
 import { formatDateBr } from '../date-format.js';
-import { replaceTestDraftInputs, testCardSummary, testDefinition } from '../test-inputs.js';
+import { draftInputsForTest, replaceTestDraftInputs, testCardSummary, testDefinition } from '../test-inputs.js';
 import { bindSelectionSummary, selectionCardsMarkup } from './selection-controls.js';
-import { openTestSheet, testFieldsMarkup } from './test-sheet.js';
+import { openTestSheet } from './test-sheet.js';
 
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
 
@@ -15,7 +15,7 @@ export function renderAssessmentEditor(root, assessment, onBack) {
   const person = { sex: assessment.personSex, birthDate: assessment.personBirthDate };
   const counts = sessionColorCounts({ selectedTestIds: assessment.testIds, results: assessment.results || [], person, assessmentDate: assessment.date });
   const availableTests = TESTS.filter(([id]) => !assessment.testIds.includes(id));
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">${assessment.status === 'concluida' ? 'AVALIAÇÃO CONCLUÍDA' : 'AVALIAÇÃO EM RASCUNHO'}</p><h1>${escapeHtml(assessment.personName)}</h1><p>${formatDateBr(assessment.date)} · ${escapeHtml(assessment.professionalName)}</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card assessment-form"><section class="session-summary" aria-label="Resumo da sessão"><span class="state-chip green">${counts.green} verdes</span><span class="state-chip yellow">${counts.yellow} amarelos</span><span class="state-chip gray">${counts.gray} cinzas</span><span class="state-chip neutral">${counts.pending} pendentes</span></section><section class="test-summary-list" aria-label="Testes da avaliação">${assessment.testIds.map((id) => testSummaryCard(id, assessment, person)).join('')}</section><details class="add-tests"><summary>Adicionar testes a esta avaliação</summary>${availableTests.length ? `<p class="selection-summary" data-selection-summary="additional"></p><div class="selection-list">${selectionCardsMarkup({ name: 'additionalTestIds', items: availableTests })}</div><button class="secondary" type="button" data-add-tests data-selection-action="additional">Adicionar testes selecionados</button>` : '<p>Todos os testes disponíveis já foram incluídos.</p>'}</details><label>Notas sobre os testes <small>Internas — não aparecem no relatório.</small><textarea name="testNotes">${escapeHtml(assessment.draftInputs.testNotes ?? assessment.testNotes ?? '')}</textarea></label><label>Observações do profissional sobre o aluno <small>Aparecem no relatório quando preenchidas.</small><textarea name="studentObservations">${escapeHtml(assessment.draftInputs.studentObservations ?? assessment.studentObservations ?? '')}</textarea></label><section class="action-grid"><button name="action" value="save" data-action="save">Salvar e sincronizar</button><button class="secondary" name="action" value="complete" data-action="complete">Concluir avaliação</button></section><p class="form-message" aria-live="polite"></p></form>`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">${assessment.status === 'concluida' ? 'AVALIAÇÃO CONCLUÍDA' : 'AVALIAÇÃO EM RASCUNHO'}</p><h1>${escapeHtml(assessment.personName)}</h1><p>${formatDateBr(assessment.date)} · ${escapeHtml(assessment.professionalName)}</p></div><button class="secondary" data-back>Voltar</button></section><form class="form-card assessment-form"><section class="session-summary" aria-label="Resumo da sessão"><span class="state-chip green">${counts.green} verdes</span><span class="state-chip yellow">${counts.yellow} amarelos</span><span class="state-chip gray">${counts.gray} cinzas</span><span class="state-chip neutral">${counts.pending} pendentes</span></section><details class="add-tests" open><summary><strong>Complementar esta avaliação</strong><small>Inclua outros testes sem perder o que já foi registrado.</small></summary>${availableTests.length ? `<p class="selection-summary" data-selection-summary="additional"></p><div class="selection-list">${selectionCardsMarkup({ name: 'additionalTestIds', items: availableTests })}</div><button class="secondary" type="button" data-add-tests data-selection-action="additional">Adicionar testes selecionados</button>` : `<p class="add-tests__empty">Todos os ${TESTS.length} testes atualmente cadastrados já foram incluídos nesta avaliação.</p>`}</details><section class="test-summary-list" aria-label="Testes da avaliação">${assessment.testIds.map((id) => testSummaryCard(id, assessment, person)).join('')}</section><label>Notas sobre os testes <small>Internas — não aparecem no relatório.</small><textarea name="testNotes">${escapeHtml(assessment.draftInputs.testNotes ?? assessment.testNotes ?? '')}</textarea></label><label>Observações do profissional sobre o aluno <small>Aparecem no relatório quando preenchidas.</small><textarea name="studentObservations">${escapeHtml(assessment.draftInputs.studentObservations ?? assessment.studentObservations ?? '')}</textarea></label><section class="action-grid"><button name="action" value="save" data-action="save">Salvar e sincronizar</button><button class="secondary" name="action" value="complete" data-action="complete">Concluir avaliação</button></section><p class="form-message" aria-live="polite"></p></form>`;
   const form = root.querySelector('form');
   if (availableTests.length) bindSelectionSummary(form, { inputName: 'additionalTestIds', summarySelector: '[data-selection-summary="additional"]', buttonSelector: '[data-selection-action="additional"]', idleLabel: 'Adicionar testes selecionados', selectedLabel: 'Adicionar testes' });
   root.querySelector('[data-back]').onclick = onBack;
@@ -37,14 +37,17 @@ export function renderAssessmentEditor(root, assessment, onBack) {
   const openTest = (id, origin) => {
     const result = (assessment.results || []).find((item) => item.testId === id) || null;
     const definition = testDefinition(id);
+    assessment.hydratedTestIds ||= [];
+    if (!assessment.hydratedTestIds.includes(id)) {
+      assessment.draftInputs = { ...assessment.draftInputs, ...draftInputsForTest({ testId: id, draftInputs: assessment.draftInputs, result }) };
+      assessment.hydratedTestIds.push(id);
+    }
     const summary = testCardSummary({ testId: id, draftInputs: assessment.draftInputs, result });
-    const fields = testFieldsMarkup({ testId: id, definition, draftInputs: assessment.draftInputs });
     openTestSheet({
       origin,
       testId: id,
       definition,
       draftInputs: assessment.draftInputs,
-      fields,
       summary,
       persist: async (values) => {
         assessment.draftInputs = replaceTestDraftInputs(assessment.draftInputs, id, values);
