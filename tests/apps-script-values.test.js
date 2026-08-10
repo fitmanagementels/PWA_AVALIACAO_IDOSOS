@@ -66,6 +66,16 @@ test('classifies Back Scratch from the active sex and age reference', () => {
   assert.equal(classifyReferenceValue(rows, { ...input('feminino', 80, -2), unit: 'kgf' }), null);
 });
 
+test('uses the Back Scratch reference for each saved bilateral result', () => {
+  const classificationForSavedResult = backendHelper('classificationForSavedResult_');
+  const person = { sexo: 'feminino', dataNascimento: '1946-08-10' };
+  const rows = [backScratchReferenceRow()];
+
+  assert.equal(classificationForSavedResult({ testeId: 'back-scratch', status: 'concluido', valorOficial: -14, unidade: 'cm' }, person, '2026-08-10', rows), 'Normal');
+  assert.equal(classificationForSavedResult({ testeId: 'back-scratch', status: 'concluido', valorOficial: 0.1, unidade: 'cm' }, person, '2026-08-10', rows), 'Acima da média');
+  assert.equal(classificationForSavedResult({ testeId: 'back-scratch', status: 'naoConcluido', valorOficial: -14, unidade: 'cm', classificacao: 'preservar' }, person, '2026-08-10', rows), 'preservar');
+});
+
 test('declares a compact history summary sheet for fast person lookups', () => {
   const source = fs.readFileSync('apps-script/00_Config.gs', 'utf8');
   assert.match(source, /HISTORY_SUMMARIES: 'HistoricoResumo'/);
