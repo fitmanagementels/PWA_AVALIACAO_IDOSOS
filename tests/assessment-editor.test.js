@@ -34,6 +34,10 @@ test('offers adding tests and manual completion', () => {
   assert.match(source, /assessmentReadiness/);
 });
 
+test('returns to the attendance flow after a confirmed completion', () => {
+  assert.match(source, /assessment\.status = 'concluida';\s*await persistAssessment\(\);\s*onBack\(\);/);
+});
+
 test('uses premium cards for added tests while the detail sheet owns non-completed toggles', () => {
   assert.match(source, /selectionCardsMarkup\(\{ name: 'additionalTestIds'/);
   assert.match(source, /data-selection-summary="additional"/);

@@ -96,7 +96,8 @@ export function renderAssessmentEditor(root, assessment, onBack) {
       if (action === 'complete' && sync?.ok) {
         assessment.status = 'concluida';
         await persistAssessment();
-        message.textContent = 'Avaliação concluída e sincronizada.';
+        onBack();
+        return;
       } else message.textContent = sync?.ok ? 'Rascunho salvo e sincronizado.' : 'Rascunho salvo neste aparelho; envio pendente.';
     } catch (error) { message.textContent = error.message; }
   };
