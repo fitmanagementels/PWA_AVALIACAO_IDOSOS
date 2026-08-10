@@ -8,7 +8,7 @@ test('aborts a request that exceeds the synchronization timeout', () => {
   assert.match(source, /setTimeout/);
 });
 
-test('includes the signed-in Google session when calling Apps Script', async () => {
+test('uses an anonymous request when calling the public Apps Script Web App from GitHub Pages', async () => {
   const previousWindow = globalThis.window;
   const previousFetch = globalThis.fetch;
   const calls = [];
@@ -22,7 +22,7 @@ test('includes the signed-in Google session when calling Apps Script', async () 
   try {
     const { request } = await import(`../web/js/api-client.js?google-session-test=${Date.now()}`);
     await request('health', {}, 'GET');
-    assert.equal(calls[0].options.credentials, 'include');
+    assert.equal(calls[0].options.credentials, 'omit');
   } finally {
     globalThis.window = previousWindow;
     globalThis.fetch = previousFetch;

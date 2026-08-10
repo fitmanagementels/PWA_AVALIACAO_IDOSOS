@@ -22,7 +22,7 @@ export async function request(action, payload = {}, method = 'POST') {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
-    const response = await fetch(url, method === 'GET' ? { method, credentials: 'include', signal: controller.signal } : { method, body: JSON.stringify({ action, payload }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, credentials: 'include', signal: controller.signal });
+    const response = await fetch(url, method === 'GET' ? { method, credentials: 'omit', signal: controller.signal } : { method, body: JSON.stringify({ action, payload }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, credentials: 'omit', signal: controller.signal });
     const body = await response.json();
     if (!body.ok) throw new ApiError(body.error?.code || 'NETWORK_ERROR', body.error?.message || 'Não foi possível sincronizar');
     return body;
