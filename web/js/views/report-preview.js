@@ -31,7 +31,7 @@ function reportDocumentMarkup(model) {
       <p class="report-intro">Resultados objetivos dos testes concluídos.</p>
       <div class="report-person-context"><div><strong>${personLabel}</strong><span>${context || 'Dados da sessão'}</span></div><span class="report-person-context__kind">PRONTUÁRIO<br>FUNCIONAL</span></div>
       ${meta.isPendingSync ? '<p class="report-pending">Dados deste aparelho ainda não sincronizados.</p>' : ''}
-      <section class="report-section" aria-labelledby="report-results-title"><h2 id="report-results-title">Resultados realizados</h2><div class="report-result-grid">${summary.cards.map(summaryCardMarkup).join('')}</div></section>
+      <section class="report-section" aria-labelledby="report-results-title"><h2 id="report-results-title">Resultados realizados</h2><div class="report-result-grid">${summary.cards.map(summaryCardMarkup).join('')}</div>${summary.hasBilateral ? '<p class="report-side-legend">D = direita · E = esquerda</p>' : ''}</section>
       ${summary.studentObservations ? `<section class="report-observations"><h2>Observações do profissional</h2><p>${escapeHtml(summary.studentObservations).replace(/\n/g, '<br>')}</p></section>` : ''}
     </section>
     <section class="report-technical" aria-labelledby="report-technical-title">
@@ -43,7 +43,7 @@ function reportDocumentMarkup(model) {
 }
 
 function summaryCardMarkup(test) {
-  return `<article class="report-result-card"><h3>${escapeHtml(test.title)}</h3><strong>${escapeHtml(test.value)}</strong><span>${escapeHtml(test.classification)}</span></article>`;
+  return `<article class="report-result-card"><h3>${escapeHtml(test.title)}</h3><strong>${escapeHtml(test.value)}</strong>${test.classification ? `<span>${escapeHtml(test.classification)}</span>` : ''}</article>`;
 }
 
 function domainMarkup(domain) {
@@ -51,6 +51,6 @@ function domainMarkup(domain) {
 }
 
 function technicalCardMarkup(test) {
-  const sides = test.sides.map((side) => `<div class="report-side"><span>${escapeHtml(side.label || 'Resultado')}</span><strong>${escapeHtml(`${side.value}${side.unit ? ` ${side.unit}` : ''}`)}</strong>${side.attempts.length ? `<small>Tentativas: ${escapeHtml(side.attempts.join(' · '))}${side.unit ? ` ${escapeHtml(side.unit)}` : ''}</small>` : ''}</div>`).join('');
-  return `<article class="report-technical-card"><div class="report-technical-card__top"><h4>${escapeHtml(test.title)}</h4><span>${escapeHtml(test.classification)}</span></div><strong class="report-technical-card__value">${escapeHtml(test.value)}</strong><div class="report-side-grid">${sides}</div></article>`;
+  const sides = test.sides.map((side) => `<div class="report-side"><span>${escapeHtml(side.label || 'Resultado')}</span><strong>${escapeHtml(`${side.value}${side.unit ? ` ${side.unit}` : ''}`)}</strong>${side.attempts.length ? `<small>Tentativas: ${side.attempts.map((attempt) => `${escapeHtml(attempt.order)}ª: ${escapeHtml(attempt.value)}`).join(' · ')}${side.unit ? ` ${escapeHtml(side.unit)}` : ''}</small>` : ''}</div>`).join('');
+  return `<article class="report-technical-card"><div class="report-technical-card__top"><h4>${escapeHtml(test.title)}</h4>${test.classification ? `<span>${escapeHtml(test.classification)}</span>` : ''}</div><strong class="report-technical-card__value">${escapeHtml(test.value)}</strong><div class="report-side-grid">${sides}</div></article>`;
 }

@@ -19,7 +19,7 @@ test('uses official value instead of all attempt values in technical results', (
   const model = buildReportModel(assessment);
   assert.equal(model.technical.domains[0].tests[0].value, '81 elevações');
   assert.equal(JSON.stringify(model.summary).includes('76'), false);
-  assert.equal(model.technical.domains[0].tests[0].sides[0].attempts[0], '76');
+  assert.deepEqual(model.technical.domains[0].tests[0].sides[0].attempts[0], { order: 1, value: '76' });
 });
 
 test('groups bilateral official values into one selected test card and calculates age on the assessment date', () => {
@@ -39,7 +39,7 @@ test('groups bilateral official values into one selected test card and calculate
   assert.deepEqual(model.technical.domains[0].tests[0].sides.map((side) => side.label), ['Direito', 'Esquerdo']);
 });
 
-test('keeps only completed selected results and renders a clear fallback classification', () => {
+test('keeps only completed selected results without inventing a missing classification', () => {
   const model = buildReportModel({
     person: { name: 'Maria', birthDate: '1954-01-01' },
     assessment: { date: '2026-08-01', professionalName: 'Elohim' },
@@ -51,5 +51,37 @@ test('keeps only completed selected results and renders a clear fallback classif
   });
 
   assert.deepEqual(model.summary.cards.map((card) => card.testId), ['step-2min']);
-  assert.equal(model.summary.cards[0].classification, 'Sem referência cadastrada');
+  assert.equal(model.summary.cards[0].classification, null);
+});
+
+test('presents SPPB components as seconds instead of a generic score', () => {
+  const model = buildReportModel({
+    person: { name: 'Maria', birthDate: '1954-01-01' },
+    assessment: { date: '2026-08-01' },
+    results: [{
+      testId: 'sppb', status: 'concluido', unit: 'score',
+      officialBySide: { caminhada4m: 4.43, sentarLevantar5x: 7.56, equilibrio: 10 }
+    }],
+    includedTestIds: ['sppb']
+  });
+
+  assert.equal(model.summary.cards[0].value.includes('score'), false);
+  assert.deepEqual(model.technical.domains[0].tests[0].sides.map((side) => side.unit), ['s', 's', 's']);
+});
+
+test('keeps ordered attempts for technical reading and marks bilateral summaries', () => {
+  const model = buildReportModel({
+    person: {}, assessment: {},
+    results: [{
+      testId: 'knee-extension-isometric', status: 'concluido', unit: 'kgf',
+      officialBySide: { direito: 20, esquerdo: 19 },
+      attempts: [{ side: 'direito', value: 18 }, { side: 'direito', value: 20 }]
+    }],
+    includedTestIds: ['knee-extension-isometric']
+  });
+
+  assert.equal(model.summary.hasBilateral, true);
+  assert.deepEqual(model.technical.domains[0].tests[0].sides[0].attempts, [
+    { order: 1, value: '18' }, { order: 2, value: '20' }
+  ]);
 });

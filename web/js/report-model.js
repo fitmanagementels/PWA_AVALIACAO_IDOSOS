@@ -4,7 +4,7 @@ const TEST_META = {
   'back-scratch': { domain: 'Flexibilidade', order: 3 },
   'chair-sit-reach': { domain: 'Flexibilidade', order: 3 },
   sppb: { domain: 'Mobilidade e equilíbrio', order: 1 },
-  'step-2min': { domain: 'Capacidade cardiorrespiratória', order: 2 },
+  'step-2min': { domain: 'Capacidade cardiorrespiratória', order: 2, title: 'Teste de 2 minutos' },
   'knee-extension-isometric': { domain: 'Força', order: 4 },
   'rowing-isometric': { domain: 'Força', order: 4 }
 };
@@ -19,6 +19,7 @@ const SIDE_LABELS = {
   unico: ''
 };
 const SIDE_SHORT_LABELS = { direito: 'D', esquerdo: 'E' };
+const SPPB_SUMMARY_LABELS = { caminhada4m: '4 m', sentarLevantar5x: '5x', equilibrio: 'Eq.' };
 
 export function buildReportModel({ person = {}, assessment = {}, results = [], includedTestIds = [], isPendingSync = false }) {
   const selectedIds = new Set(includedTestIds || []);
@@ -36,6 +37,7 @@ export function buildReportModel({ person = {}, assessment = {}, results = [], i
     },
     summary: {
       cards,
+      hasBilateral: detailedTests.some((test) => test.sides.some((side) => side.key === 'direito' || side.key === 'esquerdo')),
       studentObservations: String(assessment.studentObservations || assessment.observacoesAluno || '').trim() || null
     },
     technical: { domains: groupByDomain(detailedTests) }
@@ -87,29 +89,36 @@ function attemptsForSide(attempts, side) {
 
 function toReportTest({ testId, rows }) {
   const first = rows[0];
-  const unit = first.unit;
+  const unit = displayUnit(testId, first.side, first.unit);
   return {
     testId,
-    title: TEST_NAMES[testId] || testId,
+    title: TEST_META[testId]?.title || TEST_NAMES[testId] || testId,
     domain: TEST_META[testId]?.domain || 'Outros resultados',
     order: TEST_META[testId]?.order || 99,
     value: valueText(testId, rows, unit),
-    classification: rows.find((row) => row.classification)?.classification || 'Sem referência cadastrada',
+    classification: rows.find((row) => row.classification)?.classification || null,
     unit,
     sides: rows.map((row) => ({
       key: row.side || 'unico',
       label: SIDE_LABELS[row.side || 'unico'] || titleCase(row.side || ''),
       value: formatNumber(row.officialValue),
-      unit: row.unit,
-      attempts: (row.attempts || []).map((attempt) => formatNumber(attempt.value ?? attempt.valor)).filter(Boolean)
+      unit: displayUnit(testId, row.side, row.unit),
+      attempts: (row.attempts || []).map((attempt, index) => ({
+        order: Number(attempt.order ?? attempt.ordem ?? index + 1),
+        value: formatNumber(attempt.value ?? attempt.valor)
+      })).filter((attempt) => attempt.value !== '—')
     }))
   };
 }
 
 function valueText(testId, rows, unit) {
-  if (testId === 'sppb') return rows.map((row) => `${SIDE_LABELS[row.side] || titleCase(row.side)} ${formatNumber(row.officialValue)}`.trim()).join(' · ');
+  if (testId === 'sppb') return rows.map((row) => `${SPPB_SUMMARY_LABELS[row.side] || SIDE_LABELS[row.side] || titleCase(row.side)} ${formatNumber(row.officialValue)} s`.trim()).join(' · ');
   if (rows.length === 1 && (rows[0].side || 'unico') === 'unico') return `${formatNumber(rows[0].officialValue)}${unit ? ` ${unit}` : ''}`.trim();
   return `${rows.map((row) => `${SIDE_SHORT_LABELS[row.side] || SIDE_LABELS[row.side] || titleCase(row.side)} ${formatNumber(row.officialValue)}`).join(' · ')}${unit ? ` ${unit}` : ''}`.trim();
+}
+
+function displayUnit(testId, side, unit) {
+  return testId === 'sppb' && side !== 'unico' ? 's' : unit;
 }
 
 function groupByDomain(tests) {
