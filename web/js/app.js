@@ -32,7 +32,7 @@ window.addEventListener('offline', async () => {
 });
 document.querySelector('[data-sync-now]').addEventListener('click', synchronize);
 window.syncNow = synchronize;
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+if (window.APP_RUNTIME !== 'apps-script' && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 renderStatus({ phase: navigator.onLine ? 'synced' : 'offline', pendingCount: 0, message: navigator.onLine ? 'Tudo sincronizado' : 'offline · alterações protegidas neste aparelho', items: [] });
 renderPeople(root);
 refreshPeople().catch(() => setStatus('dados locais · sincronização indisponível'));

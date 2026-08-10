@@ -28,3 +28,39 @@ test('includes the signed-in Google session when calling Apps Script', async () 
     globalThis.fetch = previousFetch;
   }
 });
+
+test('uses google.script.run from the Apps Script operational runtime', async () => {
+  const previousWindow = globalThis.window;
+  const previousGoogle = globalThis.google;
+  const calls = [];
+
+  globalThis.google = {
+    script: {
+      run: {
+        withSuccessHandler(onSuccess) {
+          return {
+            withFailureHandler() {
+              return {
+                listPeople(payload) {
+                  calls.push(payload);
+                  onSuccess({ ok: true, data: [{ pessoaId: 'pessoa-operacional' }] });
+                }
+              };
+            }
+          };
+        }
+      }
+    }
+  };
+  globalThis.window = { APP_RUNTIME: 'apps-script', google: globalThis.google };
+
+  try {
+    const { request } = await import(`../web/js/api-client.js?apps-script-runtime-test=${Date.now()}`);
+    const response = await request('listPeople', {}, 'GET');
+    assert.deepEqual(response.data, [{ pessoaId: 'pessoa-operacional' }]);
+    assert.deepEqual(calls, [{}]);
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.google = previousGoogle;
+  }
+});

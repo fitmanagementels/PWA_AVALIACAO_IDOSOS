@@ -74,3 +74,37 @@ Expected: status passa de “envio pendente” para “sincronizado” e a plani
 - [ ] **Step 3: Registrar evolução para produção**
 
 Antes de inserir dados reais, implementar no backend uma lista explícita de e-mails autorizados. A alteração não apaga a planilha, o repositório ou a fila local.
+
+### Task 3: Executar a interface dentro da Web App
+
+**Files:**
+- Create: `apps-script/08_OperationalApp.html`
+- Modify: `apps-script/01_WebApp.gs`
+- Modify: `web/js/api-client.js`
+- Modify: `web/js/app.js`
+- Modify: `web/sw.js`
+- Test: `tests/api-client.test.js`, `tests/apps-script-webapp.test.js`, `tests/service-worker.test.js`
+
+**Interfaces:**
+- Consumes: `window.APP_RUNTIME === 'apps-script'` e `google.script.run` fornecidos pelo HTML Service.
+- Produces: uma Web App que abre a mesma interface e chama as funções já existentes (`listPeople`, `savePerson`, `createAssessment`, `saveAssessment`, `completeAssessment`, `generateReport`) sem `fetch` cross-origin.
+
+- [ ] **Step 1: Escrever testes de regressão**
+
+Cobrir três contratos: `doGet` sem `action` retorna a casca operacional, o cliente usa `google.script.run` em runtime Apps Script, e o service worker não é registrado dentro desse runtime.
+
+- [ ] **Step 2: Criar a casca operacional e o roteamento**
+
+Fazer `doGet` devolver JSON somente quando `action` estiver presente. Sem `action`, devolver `HtmlService.createHtmlOutputFromFile('08_OperationalApp')`. A página HTML declara `window.APP_RUNTIME = 'apps-script'`, mantém os elementos `app`, `data-sync-dock` e `data-sync-status`, e carrega os estilos e o módulo `app.js` do GitHub Pages por URLs HTTPS absolutas.
+
+- [ ] **Step 3: Adaptar o cliente de API**
+
+Quando `window.APP_RUNTIME === 'apps-script'`, converter a chamada em `google.script.run.withSuccessHandler(...).withFailureHandler(...)[action](payload)`. Em outros runtimes, manter a fila e o `fetch` existentes.
+
+- [ ] **Step 4: Proteger o PWA estático**
+
+Não registrar service worker no runtime Apps Script e incrementar a versão do cache do GitHub Pages para trazer o novo `app.js` aos aparelhos instalados.
+
+- [ ] **Step 5: Testar e publicar os dois lados**
+
+Rodar `npm test`, enviar `web/` ao GitHub Pages e `apps-script/` por clasp. Atualizar a implantação Web App existente para a versão recém-enviada, preservando as configurações de acesso. Abrir a URL `/exec` e acionar uma sincronização pendente uma única vez.

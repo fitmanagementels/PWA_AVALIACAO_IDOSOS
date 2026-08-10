@@ -1,7 +1,14 @@
 function doGet(e) {
-  const action = (e.parameter && e.parameter.action) || 'health';
+  const action = e.parameter && e.parameter.action;
+  if (!action) return operationalApp_();
   const handlers = { health: function() { return jsonOk_({ service: 'pwa-avaliacao-idosos' }); }, listPeople: listPeople, getPerson: getPerson, getAssessment: getAssessment, getHistory: getHistory, getHistorySummary: getHistorySummary, getCatalog: getCatalog };
   return jsonOutput_(handlers[action] ? handlers[action](e.parameter || {}) : jsonError_('NOT_FOUND', 'Ação não encontrada'));
+}
+
+function operationalApp_() {
+  return HtmlService.createHtmlOutputFromFile('08_OperationalApp')
+    .setTitle('XSTEAM — Avaliação funcional')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }
 
 function doPost(e) {
