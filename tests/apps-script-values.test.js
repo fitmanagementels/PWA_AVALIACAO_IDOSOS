@@ -132,3 +132,11 @@ test('declares archival and active-draft protection in the assessment API', () =
   assert.match(assessments, /ACTIVE_DRAFT_EXISTS/);
   assert.match(assessments, /function archiveAssessment\(payload\)/);
 });
+
+test('archives older active drafts when an assessment is concluded', () => {
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(assessments, /function archiveOtherActiveDrafts_\(pessoaId, concludedAssessmentId\)/);
+  assert.match(assessments, /assessment\.status === 'rascunho' \|\| assessment\.status === 'pendenteDeSincronizacao'/);
+  assert.match(assessments, /archiveOtherActiveDrafts_\(assessment\.pessoaId, assessment\.avaliacaoId\)/);
+});
