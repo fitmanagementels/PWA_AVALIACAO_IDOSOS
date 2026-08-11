@@ -2,6 +2,12 @@ function newest(items, field) {
   return [...items].sort((left, right) => String(right[field] || '').localeCompare(String(left[field] || '')))[0] || null;
 }
 
+export function reconcileLocalAssessmentStatus(assessment, remoteStatus) {
+  const isLocalDraft = assessment && (assessment.status === 'rascunho' || assessment.status === 'pendenteDeSincronizacao');
+  const isSettledRemotely = remoteStatus === 'concluida' || remoteStatus === 'arquivada';
+  return isLocalDraft && isSettledRemotely ? { ...assessment, status: remoteStatus } : assessment;
+}
+
 export function buildAttendanceItems(people, assessments, historiesByPerson) {
   return people.map((person) => {
     const draft = newest(

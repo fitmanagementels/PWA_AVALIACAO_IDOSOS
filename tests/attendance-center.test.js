@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildAttendanceItems } from '../web/js/views/attendance-center.js';
+import { buildAttendanceItems, reconcileLocalAssessmentStatus } from '../web/js/views/attendance-center.js';
 
 test('prioritizes the newest local draft without creating a clinical status', () => {
   const [item] = buildAttendanceItems(
@@ -41,4 +41,13 @@ test('keeps an active draft visible alongside the latest completed assessment', 
   assert.equal(item.kind, 'remote-draft');
   assert.equal(item.remoteDraft.avaliacaoId, 'draft');
   assert.equal(item.history.assessmentId, 'done');
+});
+
+test('stops treating a locally stored draft as active after the backend archives it', () => {
+  const draft = { id: 'old-draft', personId: 'p-4', status: 'rascunho', updatedAt: '2026-08-04T10:00:00Z' };
+
+  assert.deepEqual(
+    reconcileLocalAssessmentStatus(draft, 'arquivada'),
+    { ...draft, status: 'arquivada' },
+  );
 });

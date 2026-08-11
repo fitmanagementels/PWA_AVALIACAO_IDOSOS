@@ -1,8 +1,9 @@
-import { mutationQueue } from './storage.js';
+import { hasPendingAssessmentMutation, mutationQueue } from './storage.js';
 import { request } from './api-client.js';
 import { flushQueue, pendingStatus } from './sync-status.js';
 import { renderSyncPanel } from './views/sync-panel.js';
 import { renderPeople, replacePeopleFromApi } from './views/people.js';
+import { reconcileLocalAssessmentStatus } from './views/attendance-center.js';
 import { isCurrentPage } from './navigation-guard.js';
 
 const status = document.querySelector('[data-sync-status]');
@@ -10,10 +11,29 @@ const syncDock = document.querySelector('[data-sync-dock]');
 const root = document.querySelector('#app');
 function setStatus(text) { status.textContent = text; }
 function renderStatus(state) { setStatus(state.message); renderSyncPanel(syncDock, state, { onRetry: synchronize }); }
+function localAssessments() {
+  return Object.keys(localStorage).filter((key) => key.startsWith('assessment:')).map((key) => {
+    try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; }
+  }).filter(Boolean);
+}
+async function reconcileSettledLocalDrafts() {
+  for (const assessment of localAssessments()) {
+    if (assessment.status !== 'rascunho' && assessment.status !== 'pendenteDeSincronizacao') continue;
+    if (await hasPendingAssessmentMutation(assessment.id)) continue;
+    try {
+      const response = await request('getAssessment', { avaliacaoId: assessment.id }, 'GET');
+      const reconciled = reconcileLocalAssessmentStatus(assessment, response.data.assessment.status);
+      if (reconciled !== assessment) localStorage.setItem(`assessment:${assessment.id}`, JSON.stringify(reconciled));
+    } catch (_) {
+      // Sem confirmação remota, o rascunho local permanece intacto.
+    }
+  }
+}
 async function refreshPeople() {
   if (!navigator.onLine) return;
   const response = await request('listPeople', {}, 'GET');
   replacePeopleFromApi(response.data);
+  await reconcileSettledLocalDrafts();
   if (isCurrentPage('people')) renderPeople(root);
 }
 async function synchronize() {
