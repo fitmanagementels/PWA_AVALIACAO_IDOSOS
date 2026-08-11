@@ -4,5 +4,5 @@ import test from 'node:test';
 
 test('uses the active public Web App endpoint for the GitHub Pages PWA', () => {
   const source = fs.readFileSync('web/config.js', 'utf8');
-  assert.match(source, /AKfycbybACMhUIMu3Z5-hJKZdSDErw2sQamH-KpF5kfl7L1-8C8DtIir7n1EvtDhNzyJrmiuDw/);
+  assert.match(source, /AKfycbxiOh-9A6XTTSnzL-ViJ7DP-cvckZI6njaE0bE7V18F_fkfT9ZFxHAk8FefgKF8eTngDQ/);
 });
