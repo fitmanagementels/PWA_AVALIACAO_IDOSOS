@@ -34,8 +34,17 @@ test('offers adding tests and manual completion', () => {
   assert.match(source, /assessmentReadiness/);
 });
 
-test('returns to the attendance flow after a confirmed completion', () => {
-  assert.match(source, /assessment\.status = 'concluida';\s*await persistAssessment\(\);\s*onBack\(\);/);
+test('keeps addition collapsed and requires confirmation before removing a test', () => {
+  assert.match(source, /<details class="add-tests">/);
+  assert.doesNotMatch(source, /<details class="add-tests" open>/);
+  assert.match(source, /data-remove-test=/);
+  assert.match(source, /window\.confirm\('Retirar este teste da avaliação\?/);
+  assert.match(source, /queueMutation\('removeAssessmentTest'/);
+});
+
+test('returns to the attendance flow immediately after queuing completion', () => {
+  assert.match(source, /assessment\.status = 'concluida';\s*await persistAssessment\(\);\s*window\.scheduleSync\?\.\(\);\s*onComplete\(\);/);
+  assert.doesNotMatch(source, /const sync = await window\.syncNow\(\);/);
 });
 
 test('uses premium cards for added tests while the detail sheet owns non-completed toggles', () => {

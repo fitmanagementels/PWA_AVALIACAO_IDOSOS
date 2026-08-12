@@ -17,6 +17,10 @@ export function addSelectedTests(currentTestIds, additionalTestIds) {
   return [...new Set([...(currentTestIds || []), ...(additionalTestIds || [])])];
 }
 
+export function removeSelectedTest(currentTestIds, testId) {
+  return (currentTestIds || []).filter((id) => id !== testId);
+}
+
 export function buildResult({ testId, unit, direction = 'highest', attempts }) {
   const bySide = attempts.reduce((groups, attempt) => {
     if (Number.isFinite(Number(attempt.value))) (groups[attempt.side || 'unico'] ||= []).push(Number(attempt.value));

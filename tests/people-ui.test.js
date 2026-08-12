@@ -23,6 +23,14 @@ test('prevents a silent second draft and offers an explicit archive path', () =>
   assert.match(source, /Retomar avaliação em andamento/);
 });
 
+test('offers a discreet archived drafts area with confirmed permanent deletion', () => {
+  assert.match(source, /data-archived-drafts/);
+  assert.match(source, /renderArchivedDrafts/);
+  assert.match(source, /request\('listArchivedDrafts', \{\}, 'GET'\)/);
+  assert.match(source, /queueMutation\('deleteArchivedAssessment'/);
+  assert.match(source, /window\.confirm\('Apagar permanentemente este rascunho arquivado\?/);
+});
+
 test('assessment and history use the ready state and grouped existing timeline', () => {
   assert.match(source, /data-selection-ready/);
   assert.match(source, /groupHistoryByMonth/);

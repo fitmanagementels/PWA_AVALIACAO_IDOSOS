@@ -140,3 +140,25 @@ test('archives older active drafts when an assessment is concluded', () => {
   assert.match(assessments, /assessment\.status === 'rascunho' \|\| assessment\.status === 'pendenteDeSincronizacao'/);
   assert.match(assessments, /archiveOtherActiveDrafts_\(assessment\.pessoaId, assessment\.avaliacaoId\)/);
 });
+
+test('declares guarded deletion of a test from an active assessment', () => {
+  const webApp = fs.readFileSync('apps-script/01_WebApp.gs', 'utf8');
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(webApp, /removeAssessmentTest: removeAssessmentTest/);
+  assert.match(assessments, /function removeAssessmentTest\(payload\)/);
+  assert.match(assessments, /Somente avaliações em rascunho podem ter testes retirados/);
+  assert.match(assessments, /deleteRowsByField_\(SHEETS\.RESULTS, 'resultadoId'/);
+});
+
+test('declares listing and permanent deletion only for archived drafts', () => {
+  const webApp = fs.readFileSync('apps-script/01_WebApp.gs', 'utf8');
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(webApp, /listArchivedDrafts: listArchivedDrafts/);
+  assert.match(webApp, /deleteArchivedAssessment: deleteArchivedAssessment/);
+  assert.match(assessments, /function listArchivedDrafts\(\)/);
+  assert.match(assessments, /function deleteArchivedAssessment\(payload\)/);
+  assert.match(assessments, /Somente rascunhos arquivados podem ser apagados permanentemente/);
+  assert.match(assessments, /deleteRowsByField_\(SHEETS\.HISTORY_SUMMARIES, 'avaliacaoId'/);
+});

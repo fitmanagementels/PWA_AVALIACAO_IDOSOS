@@ -9,6 +9,7 @@ import { isCurrentPage } from './navigation-guard.js';
 const status = document.querySelector('[data-sync-status]');
 const syncDock = document.querySelector('[data-sync-dock]');
 const root = document.querySelector('#app');
+let syncPromise = null;
 function setStatus(text) { status.textContent = text; }
 function renderStatus(state) { setStatus(state.message); renderSyncPanel(syncDock, state, { onRetry: synchronize }); }
 function localAssessments() {
@@ -36,7 +37,7 @@ async function refreshPeople() {
   await reconcileSettledLocalDrafts();
   if (isCurrentPage('people')) renderPeople(root);
 }
-async function synchronize() {
+async function synchronizeQueue() {
   if (!mutationQueue) return renderStatus({ phase: 'error', pendingCount: 0, message: 'sincronização indisponível neste navegador', items: [] });
   if (!navigator.onLine) return renderStatus(await pendingStatus(mutationQueue, 'offline', 'offline · alterações protegidas neste aparelho'));
   renderStatus(await pendingStatus(mutationQueue, 'sending', 'Enviando alterações…'));
@@ -45,6 +46,11 @@ async function synchronize() {
   if (result.ok) await refreshPeople().catch(() => setStatus('sincronizado · atualização compartilhada pendente'));
   return result;
 }
+function synchronize() {
+  if (syncPromise) return syncPromise;
+  syncPromise = synchronizeQueue().finally(() => { syncPromise = null; });
+  return syncPromise;
+}
 window.addEventListener('online', synchronize);
 window.addEventListener('offline', async () => {
   if (!mutationQueue) return renderStatus({ phase: 'error', pendingCount: 0, message: 'sincronização indisponível neste navegador', items: [] });
@@ -52,6 +58,7 @@ window.addEventListener('offline', async () => {
 });
 document.querySelector('[data-sync-now]').addEventListener('click', synchronize);
 window.syncNow = synchronize;
+window.scheduleSync = () => queueMicrotask(() => { synchronize().catch(() => {}); });
 if (window.APP_RUNTIME !== 'apps-script' && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 renderStatus({ phase: navigator.onLine ? 'synced' : 'offline', pendingCount: 0, message: navigator.onLine ? 'Tudo sincronizado' : 'offline · alterações protegidas neste aparelho', items: [] });
 renderPeople(root);

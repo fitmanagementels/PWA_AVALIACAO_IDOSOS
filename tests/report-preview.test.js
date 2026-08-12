@@ -9,6 +9,8 @@ test('report preview is an independent view with native print and a back action'
   assert.match(source, /window\.print\(\)/);
   assert.match(source, /data-report-back/);
   assert.match(source, /data-report-print/);
+  assert.match(source, /options\.onBack\?\.\(\);/);
+  assert.doesNotMatch(source, /await /);
 });
 
 test('print stylesheet defines adaptive A5 output and hides PWA controls', () => {

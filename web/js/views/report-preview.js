@@ -8,7 +8,7 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character
 export function renderReportPreview(root, options) {
   const model = buildReportModel(options);
   root.innerHTML = `<section class="report-preview-screen"><div class="report-preview-actions" aria-label="Ações do relatório"><button class="secondary" type="button" data-report-back>Voltar</button><button type="button" data-report-print>Salvar / compartilhar PDF</button></div>${reportDocumentMarkup(model)}</section>`;
-  root.querySelector('[data-report-back]').onclick = () => options.onBack();
+  root.querySelector('[data-report-back]').onclick = () => options.onBack?.();
   root.querySelector('[data-report-print]').onclick = () => window.print();
 }
 

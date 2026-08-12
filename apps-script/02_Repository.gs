@@ -23,6 +23,17 @@ function updateRowById_(sheetName, idColumn, record) {
   sheet.getRange(index + 2, 1, 1, headers.length).setValues([headers.map(function(header) { return record[header] === undefined ? '' : record[header]; })]);
 }
 
+function deleteRowsByField_(sheetName, fieldName, value) {
+  const sheet = spreadsheet_().getSheetByName(sheetName); const headers = SHEET_HEADERS[sheetName]; const fieldIndex = headers.indexOf(fieldName);
+  if (!sheet || fieldIndex === -1 || sheet.getLastRow() < 2) return 0;
+  const values = sheet.getDataRange().getValues(); let deleted = 0;
+  for (let index = values.length - 1; index >= 1; index -= 1) {
+    if (String(values[index][fieldIndex]) !== String(value)) continue;
+    sheet.deleteRow(index + 1); deleted += 1;
+  }
+  return deleted;
+}
+
 function withLock_(work) { const lock = LockService.getScriptLock(); lock.waitLock(30000); try { return work(); } finally { lock.releaseLock(); } }
 
 function fieldOrBlank_(value) { return value === undefined || value === null ? '' : value; }
