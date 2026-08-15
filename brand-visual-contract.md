@@ -54,3 +54,40 @@
 - Ordem das zonas no mobile: cabeçalho operacional → busca → lista de cards → ação do card. O botão Nova pessoa preserva destaque, enquanto rascunhos arquivados fica como ícone discreto ao lado.
 - Adaptação de dados densos: não aplicável; cards já evitam rolagem horizontal. Datas e estados podem quebrar linha, mas nome e ação não se sobrepõem.
 - Expansão para telas maiores: cards continuam empilhados, com grade interna em duas colunas — identidade à esquerda e situação/ação à direita. Espaço entre cards substitui os divisores contínuos da tabela.
+
+## Marca e acabamento
+
+- Voz visual aplicada: Cobalto silencioso — tecnologia clínica escura, precisa e contida.
+- Tema final e proporção dark (mínimo 60%): dark integral; superfícies claras não são usadas na interface operacional.
+- Uso permitido de `#E2FF42` — marca/foco/ação/métrica: logo, CTA principal, foco visível de teclado e indicadores de prioridade. Não é fundo recorrente de cards ou páginas.
+- Uso de geometria e efeitos: gradiente interno curto para diferenciar níveis de superfície; textura diagonal e símbolo XSTEAM original em baixa opacidade exclusivamente em áreas amplas de contexto, nunca sobre dados clínicos ou campos.
+
+### Tokens aplicados
+
+| Categoria | Token | Valor | Uso |
+|---|---|---|---|
+| Base | `--surface-base` | `#06080D` | Fundo de página. |
+| Card | `--surface-card` | `#0E131D` | Conteúdo operacional. |
+| Elevada | `--surface-elevated` | `#192232` | Cabeçalho interno e contexto. |
+| Ativa | `--surface-active` | `#2A3850` | Hover e seleção. |
+| Overlay | `--surface-overlay` | `#05070C` | Modais, menus e dock. |
+| Campo | `--surface-field` | `#090E15` | Inputs e textareas. |
+| Borda | `--border` | `#34425B` | Contornos e divisores. |
+| Texto secundário | `--text-secondary` | `#B2C0CD` | Metadados e explicações. |
+
+### Quatro superfícies
+
+| Nível | Token | Luminância/borda | Conteúdo |
+|---|---|---|---|
+| base | `--surface-base` | Azul-obisidiana mais escuro | Página e respiro. |
+| card | `--surface-card` | Azul profundo, borda fria sutil | Cards e formulários. |
+| ativo | `--surface-active` | Azul cobalto dessaturado | Hover, seleção e interação persistente. |
+| overlay | `--surface-overlay` | Quase preto azulado, sombra profunda | Menus, modais e dock. |
+
+### Verificação final
+
+- Desktop — contraste, foco, dados e estados: previsto para validação durante a implementação em cards, controles, modais e dock.
+- Mobile — ordem, alcance, legibilidade, overflow e overlays: previsto para validação durante a implementação nos breakpoints existentes.
+- Motion com `transform`/`opacity`: 180–220 ms somente em interação e feedback.
+- `prefers-reduced-motion`: preservado com remoção de animações não essenciais.
+- Pendências restantes: implementar tokens no CSS e executar testes visuais/automatizados.
