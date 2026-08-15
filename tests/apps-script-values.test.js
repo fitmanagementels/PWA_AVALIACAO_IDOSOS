@@ -172,6 +172,13 @@ test('declares a targeted repair for results missing their reference snapshot', 
   assert.match(assessments, /resultWithMissingReferenceApplication_\(result, person, assessment\.data, referenceRows\)/);
 });
 
+test('declares a no-argument repair that only considers missing reference snapshots', () => {
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(assessments, /function repairMissingReferenceApplications\(\)/);
+  assert.match(assessments, /if \(!updated\) return;/);
+});
+
 test('builds the exact active Back Scratch reference record', () => {
   const record = backendHelper('backScratchReferenceRecord_')();
   const criteria = JSON.parse(record.criteriosJson);

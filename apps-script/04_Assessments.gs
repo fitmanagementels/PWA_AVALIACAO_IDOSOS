@@ -125,6 +125,35 @@ function repairMissingReferenceApplicationsForAssessment(assessmentId) {
   });
 }
 
+function repairMissingReferenceApplications() {
+  return withLock_(function() {
+    const assessments = getRows_(SHEETS.ASSESSMENTS);
+    const assessmentsById = assessments.reduce(function(index, assessment) { index[assessment.avaliacaoId] = assessment; return index; }, {});
+    const peopleById = getRows_(SHEETS.PEOPLE).reduce(function(index, person) { index[person.pessoaId] = person; return index; }, {});
+    const referenceRows = getRows_(SHEETS.REFERENCES);
+    const results = getRows_(SHEETS.RESULTS);
+    const repairedAssessmentIds = {};
+    let repaired = 0;
+
+    results.forEach(function(result) {
+      const assessment = assessmentsById[result.avaliacaoId];
+      const person = assessment && peopleById[assessment.pessoaId];
+      const updated = assessment && resultWithMissingReferenceApplication_(result, person, assessment.data, referenceRows);
+      if (!updated) return;
+      updateRowById_(SHEETS.RESULTS, 'resultadoId', updated);
+      Object.assign(result, updated);
+      repairedAssessmentIds[assessment.avaliacaoId] = true;
+      repaired += 1;
+    });
+
+    Object.keys(repairedAssessmentIds).forEach(function(assessmentId) {
+      const assessment = assessmentsById[assessmentId];
+      updateHistorySummary_(assessment, results.filter(function(result) { return result.avaliacaoId === assessmentId; }));
+    });
+    return jsonOk_({ resultadosReparados: repaired, avaliacoesAtualizadas: Object.keys(repairedAssessmentIds).length });
+  });
+}
+
 function backScratchReferenceRecord_() {
   return {
     referenciaId: 'ref-back-scratch-v1',
