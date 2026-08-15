@@ -16,11 +16,16 @@ export function pickBestAttempt(values, direction) {
 }
 
 export function ageOnDate(birthDate, evaluationDate) {
-  const birth = new Date(`${birthDate}T00:00:00Z`);
-  const at = new Date(`${evaluationDate}T00:00:00Z`);
-  return at.getUTCFullYear() - birth.getUTCFullYear() - Number(
-    at.getUTCMonth() < birth.getUTCMonth() ||
-    (at.getUTCMonth() === birth.getUTCMonth() && at.getUTCDate() < birth.getUTCDate())
+  const parts = (value) => {
+    const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return match ? { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) } : null;
+  };
+  const birth = parts(birthDate);
+  const at = parts(evaluationDate);
+  if (!birth || !at) return null;
+  return at.year - birth.year - Number(
+    at.month < birth.month ||
+    (at.month === birth.month && at.day < birth.day)
   );
 }
 

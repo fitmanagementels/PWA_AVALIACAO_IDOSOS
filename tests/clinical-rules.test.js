@@ -23,6 +23,10 @@ test('calculates age at evaluation date', () => {
   assert.equal(ageOnDate('1954-08-02', '2026-08-01'), 71);
 });
 
+test('calculates age from ISO datetime values returned by Sheets', () => {
+  assert.equal(ageOnDate('1954-02-15T03:00:00.000Z', '2026-08-15T03:00:00.000Z'), 72);
+});
+
 test('scores 4m gait without assigning the unresolved 8.70 boundary twice', () => {
   assert.equal(scoreGait4m(4.82), 4);
   assert.equal(scoreGait4m(6.2), 3);

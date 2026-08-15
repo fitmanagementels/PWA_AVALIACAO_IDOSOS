@@ -94,6 +94,37 @@ function classificationForSavedResult_(result, person, assessmentDate, reference
   return application ? application.classificacao : result.classificacao || '';
 }
 
+function resultWithMissingReferenceApplication_(result, person, assessmentDate, referenceRows) {
+  if (result.status !== 'concluido' || result.classificacao || result.referenciaAplicadaJson) return null;
+  const application = referenceApplicationForSavedResult_(result, person, assessmentDate, referenceRows, '');
+  if (!application) return null;
+  return Object.assign({}, result, {
+    classificacao: application.classificacao,
+    referenciaId: application.referenciaId,
+    referenciaVersao: application.referenciaVersao,
+    referenciaAplicadaJson: JSON.stringify(application)
+  });
+}
+
+function repairMissingReferenceApplicationsForAssessment(assessmentId) {
+  return withLock_(function() {
+    const assessment = getRows_(SHEETS.ASSESSMENTS).find(function(row) { return row.avaliacaoId === assessmentId; });
+    if (!assessment) return jsonError_('NOT_FOUND', 'Avaliação não encontrada');
+    const person = getRows_(SHEETS.PEOPLE).find(function(row) { return row.pessoaId === assessment.pessoaId; });
+    const referenceRows = getRows_(SHEETS.REFERENCES);
+    let repaired = 0;
+    const results = getRows_(SHEETS.RESULTS).filter(function(result) { return result.avaliacaoId === assessmentId; }).map(function(result) {
+      const updated = resultWithMissingReferenceApplication_(result, person, assessment.data, referenceRows);
+      if (!updated) return result;
+      updateRowById_(SHEETS.RESULTS, 'resultadoId', updated);
+      repaired += 1;
+      return updated;
+    });
+    updateHistorySummary_(assessment, results);
+    return jsonOk_({ avaliacaoId: assessmentId, resultadosReparados: repaired });
+  });
+}
+
 function backScratchReferenceRecord_() {
   return {
     referenciaId: 'ref-back-scratch-v1',

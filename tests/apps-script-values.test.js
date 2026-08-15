@@ -76,6 +76,33 @@ test('uses the Back Scratch reference for each saved bilateral result', () => {
   assert.equal(classificationForSavedResult({ testeId: 'back-scratch', status: 'naoConcluido', valorOficial: -14, unidade: 'cm', classificacao: 'preservar' }, person, '2026-08-10', rows), 'preservar');
 });
 
+test('classifies Back Scratch when Sheets returns ISO datetimes for the person and assessment', () => {
+  const classificationForSavedResult = backendHelper('classificationForSavedResult_');
+  const person = { sexo: 'feminino', dataNascimento: '1954-02-15T03:00:00.000Z' };
+
+  assert.equal(
+    classificationForSavedResult(
+      { testeId: 'back-scratch', status: 'concluido', valorOficial: -30, unidade: 'cm' },
+      person,
+      '2026-08-15T03:00:00.000Z',
+      [backScratchReferenceRow()],
+    ),
+    'Abaixo da média',
+  );
+});
+
+test('builds a missing reference snapshot without overwriting an existing one', () => {
+  const resultWithMissingReferenceApplication = backendHelper('resultWithMissingReferenceApplication_');
+  const person = { sexo: 'feminino', dataNascimento: '1954-02-15T03:00:00.000Z' };
+  const pending = { testeId: 'back-scratch', status: 'concluido', valorOficial: -30, unidade: 'cm', classificacao: '', referenciaAplicadaJson: '' };
+  const repaired = resultWithMissingReferenceApplication(pending, person, '2026-08-15T03:00:00.000Z', [backScratchReferenceRow()]);
+
+  assert.equal(repaired.classificacao, 'Abaixo da média');
+  assert.equal(repaired.referenciaId, 'ref-back-scratch-v1');
+  assert.ok(repaired.referenciaAplicadaJson);
+  assert.equal(resultWithMissingReferenceApplication({ ...repaired, classificacao: 'Normal' }, person, '2026-08-15T03:00:00.000Z', [backScratchReferenceRow()]), null);
+});
+
 test('creates an immutable snapshot of the Back Scratch reference applied to a result', () => {
   const referenceApplicationForSavedResult = backendHelper('referenceApplicationForSavedResult_');
   const application = referenceApplicationForSavedResult(
@@ -136,6 +163,13 @@ test('declares immutable applied-reference fields in stored results', () => {
 
   assert.match(config, /'referenciaId', 'referenciaVersao', 'referenciaAplicadaJson'/);
   assert.match(assessments, /referenciaAplicadaJson/);
+});
+
+test('declares a targeted repair for results missing their reference snapshot', () => {
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(assessments, /function repairMissingReferenceApplicationsForAssessment\(assessmentId\)/);
+  assert.match(assessments, /resultWithMissingReferenceApplication_\(result, person, assessment\.data, referenceRows\)/);
 });
 
 test('builds the exact active Back Scratch reference record', () => {

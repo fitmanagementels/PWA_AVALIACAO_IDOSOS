@@ -4,12 +4,22 @@ function pickBestAttempt(values, direction) {
   return direction === 'lowest' ? Math.min.apply(null, validValues) : Math.max.apply(null, validValues);
 }
 
+function datePartsForAge_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return { year: value.getFullYear(), month: value.getMonth() + 1, day: value.getDate() };
+  }
+  const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+}
+
 function ageOnDate(birthDate, evaluationDate) {
-  const birth = new Date(`${birthDate}T00:00:00Z`);
-  const at = new Date(`${evaluationDate}T00:00:00Z`);
-  return at.getUTCFullYear() - birth.getUTCFullYear() - Number(
-    at.getUTCMonth() < birth.getUTCMonth() ||
-    (at.getUTCMonth() === birth.getUTCMonth() && at.getUTCDate() < birth.getUTCDate())
+  const birth = datePartsForAge_(birthDate);
+  const at = datePartsForAge_(evaluationDate);
+  if (!birth || !at) return null;
+  return at.year - birth.year - Number(
+    at.month < birth.month ||
+    (at.month === birth.month && at.day < birth.day)
   );
 }
 
