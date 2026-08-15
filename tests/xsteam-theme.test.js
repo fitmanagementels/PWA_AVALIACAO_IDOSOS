@@ -12,6 +12,33 @@ test('uses XSTEAM dark surface tokens and reserves lime for action and focus', (
   assert.match(css, /prefers-reduced-motion/);
 });
 
+test('uses cobalto silencioso surfaces and a subtle original brand watermark', () => {
+  const css = fs.readFileSync('web/styles/app.css', 'utf8');
+  const html = fs.readFileSync('web/index.html', 'utf8');
+  const manifest = fs.readFileSync('web/manifest.webmanifest', 'utf8');
+
+  assert.match(css, /--surface-base:\s*#06080D/i);
+  assert.match(css, /--surface-card:\s*#0E131D/i);
+  assert.match(css, /--surface-elevated:\s*#192232/i);
+  assert.match(css, /--surface-active:\s*#2A3850/i);
+  assert.match(css, /--surface-overlay:\s*#05070C/i);
+  assert.match(css, /--surface-field:\s*#090E15/i);
+  assert.match(css, /xsteam-mark\.svg/);
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(html, /theme-color" content="#06080D"/i);
+  assert.match(manifest, /"background_color": "#06080D"/i);
+  assert.match(manifest, /"theme_color": "#06080D"/i);
+  assert.match(css, /\.xsteam-select__options[\s\S]*var\(--surface-overlay\)/);
+  assert.match(css, /\.test-sheet[\s\S]*var\(--surface-card\)/);
+  assert.match(css, /\.attendance-card[\s\S]*linear-gradient/);
+  assert.match(css, /\.test-summary-card[\s\S]*linear-gradient/);
+  assert.match(css, /\.sync-dock[\s\S]*var\(--surface-overlay\)/);
+
+  const reportCss = fs.readFileSync('web/styles/report.css', 'utf8');
+  assert.match(reportCss, /linear-gradient\(125deg, #06080D, #192232\)/);
+  assert.match(reportCss, /#E2FF42/);
+});
+
 test('styles premium selection cards and binary toggles accessibly', () => {
   const css = fs.readFileSync('web/styles/app.css', 'utf8');
   assert.match(css, /\.selection-card/);
