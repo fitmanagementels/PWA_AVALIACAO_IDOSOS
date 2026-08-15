@@ -37,7 +37,8 @@ test('styles XSTEAM menus as dark popovers and mobile bottom sheets', () => {
 test('styles the attendance center, timeline and ready session action responsively', () => {
   const css = fs.readFileSync('web/styles/app.css', 'utf8');
   assert.match(css, /\.attendance-hero/);
-  assert.match(css, /\.attendance-row/);
+  assert.match(css, /\.attendance-card/);
+  assert.match(css, /\.attendance-card__next-step/);
   assert.match(css, /\.history-timeline/);
   assert.match(css, /\.assessment-submit\[data-selection-ready="true"\]/);
   assert.match(css, /@media \(min-width: 760px\)/);

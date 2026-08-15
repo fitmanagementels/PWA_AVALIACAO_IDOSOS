@@ -87,10 +87,14 @@ function readLocalAssessment(id) {
 function attendanceRowMarkup({ person, kind, draft, history }) {
   const profile = `${formatDateBr(person.birthDate)} · ${person.sex}`;
   const completed = history?.status === 'concluida' ? `<span>Última concluída: ${formatDateBr(history.date)}</span>` : '';
-  if (kind === 'draft') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span class="state-chip neutral">Rascunho neste aparelho</span>${completed}<button class="secondary" data-resume-id="${person.id}">Retomar rascunho</button></div></article>`;
-  if (kind === 'remote-draft') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span class="state-chip neutral">Avaliação em andamento</span>${completed}<button class="secondary" data-remote-resume-id="${person.id}" data-assessment-id="${person.flow.rascunhoAtivo.avaliacaoId}">Retomar avaliação</button></div></article>`;
-  if (kind === 'history') return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span>Última avaliação: ${formatDateBr(history.date)}</span><button class="secondary" data-id="${person.id}">Ver atendimento</button></div></article>`;
-  return `<article class="attendance-row"><button class="attendance-row__person" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-row__action"><span>Sem registro neste aparelho</span><button class="secondary" data-start-id="${person.id}">Nova avaliação</button></div></article>`;
+  if (kind === 'draft') return attendanceCardMarkup(person, profile, `<span class="state-chip neutral">Rascunho neste aparelho</span>${completed}<button class="secondary" data-resume-id="${person.id}">Retomar rascunho</button>`);
+  if (kind === 'remote-draft') return attendanceCardMarkup(person, profile, `<span class="state-chip neutral">Avaliação em andamento</span>${completed}<button class="secondary" data-remote-resume-id="${person.id}" data-assessment-id="${person.flow.rascunhoAtivo.avaliacaoId}">Retomar avaliação</button>`);
+  if (kind === 'history') return attendanceCardMarkup(person, profile, `<span>Última avaliação: ${formatDateBr(history.date)}</span><button class="secondary" data-id="${person.id}">Ver atendimento</button>`);
+  return attendanceCardMarkup(person, profile, `<span>Sem registro neste aparelho</span><button class="secondary" data-start-id="${person.id}">Nova avaliação</button>`);
+}
+
+function attendanceCardMarkup(person, profile, nextStep) {
+  return `<article class="attendance-card"><button class="attendance-card__identity" data-id="${person.id}"><strong>${person.name}</strong><span>${profile}</span></button><div class="attendance-card__next-step"><small>PRÓXIMO PASSO</small>${nextStep}</div></article>`;
 }
 function renderPersonForm(root) {
   const navigation = startNavigation('person-form');

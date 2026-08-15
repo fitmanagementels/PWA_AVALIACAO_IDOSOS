@@ -16,6 +16,13 @@ test('central derives local summaries while retaining the people navigation toke
   assert.match(source, /data-resume-id/);
 });
 
+test('renders each attendance as a separated operational card', () => {
+  assert.match(source, /class="attendance-card"/);
+  assert.match(source, /attendance-card__identity/);
+  assert.match(source, /attendance-card__next-step/);
+  assert.doesNotMatch(source, /class="attendance-row"/);
+});
+
 test('prevents a silent second draft and offers an explicit archive path', () => {
   assert.match(source, /function startAssessmentFlow\(/);
   assert.match(source, /function renderActiveDraftNotice\(/);

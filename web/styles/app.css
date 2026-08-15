@@ -66,18 +66,15 @@ main { max-width: 760px; margin: auto; padding: 28px 20px 116px; }
 .archived-draft { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:15px 16px; border:1px solid var(--border); border-radius:14px; background:var(--surface-card); }
 .archived-draft > div { display:grid; gap:5px; min-width:0; }.archived-draft span { color:var(--text-secondary); font-size:.86rem; font-weight:600; }
 .danger-secondary { min-height:42px; color:#f4b1a6; background:transparent; border-color:#74463f; }.danger-secondary:hover { color:#fff; background:#4a211e; border-color:#b26d61; }
-.attendance-directory { overflow:hidden; border:1px solid var(--border); border-radius:20px; background:var(--surface-card); box-shadow:0 16px 40px #0004; }
+.attendance-directory { display:grid; gap:10px; }
 .attendance-directory__header { display:none; }
-.attendance-directory__list { display:grid; }
-.attendance-row { display:grid; border-bottom:1px solid var(--border); background:var(--surface-card); }
-.attendance-row:last-child { border-bottom:0; }
-.attendance-row__person { width:100%; min-height:68px; display:grid; align-content:center; gap:5px; padding:14px 16px; color:var(--text-primary); background:transparent; border:0; border-radius:0; text-align:left; }
-.attendance-row__person:hover { background:var(--surface-active); }
-.attendance-row__person span, .attendance-row__action > span { color:var(--text-secondary); font-size:.84rem; font-weight:600; }
-.attendance-row__action { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid color-mix(in srgb, var(--border) 78%, transparent); }
-.attendance-row__action > span { flex:1 1 170px; }
-.attendance-row__action > button { min-height:48px; }
-.attendance-row__action .state-chip { flex:0 1 auto; color:#d3ddd7; }
+.attendance-directory__list { display:grid; gap:12px; }
+.attendance-card { display:grid; overflow:hidden; border:1px solid var(--border); border-radius:16px; background:var(--surface-card); box-shadow:0 12px 30px #0003; }
+.attendance-card__identity { width:100%; min-height:96px; display:grid; align-content:center; gap:7px; padding:18px; color:var(--text-primary); background:transparent; border:0; border-radius:0; text-align:left; }
+.attendance-card__identity strong { font-size:1.04rem; line-height:1.3; }.attendance-card__identity span, .attendance-card__next-step > span { color:var(--text-secondary); font-size:.86rem; font-weight:600; }
+.attendance-card__identity:hover { background:var(--surface-active); }
+.attendance-card__next-step { display:grid; align-content:center; justify-items:start; gap:10px; padding:15px 18px 18px; border-top:1px solid color-mix(in srgb, var(--border) 78%, transparent); }
+.attendance-card__next-step > small { color:var(--text-muted); font-size:.7rem; font-weight:800; letter-spacing:.08em; }.attendance-card__next-step > button { min-height:48px; }.attendance-card__next-step .state-chip { color:#d3ddd7; }
 .session-fields { display:grid; gap:12px; }
 .assessment-start { gap:18px; }
 .assessment-start .selection-group { display:grid; gap:4px; }
@@ -92,12 +89,11 @@ main { max-width: 760px; margin: auto; padding: 28px 20px 116px; }
 .history-entry:hover { background:var(--surface-active); border-color:#426258; }
 .history-entry span { color:var(--text-secondary); font-size:.84rem; font-weight:600; }
 .history-entry .history-entry__tests { overflow:hidden; color:var(--text-muted); font-weight:500; text-overflow:ellipsis; white-space:nowrap; }
-.attendance-row__person:focus-visible, .history-entry:focus-visible { outline:3px solid var(--focus); outline-offset:-3px; }
+.attendance-card__identity:focus-visible, .history-entry:focus-visible { outline:3px solid var(--focus); outline-offset:-3px; }
 @media (min-width: 760px) {
   main { max-width:920px; }
-  .attendance-directory__header { display:grid; grid-template-columns:minmax(0, 1fr) minmax(270px, .7fr); gap:20px; padding:11px 18px; color:var(--text-muted); border-bottom:1px solid var(--border); background:var(--surface-overlay); font-size:.73rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-  .attendance-row { grid-template-columns:minmax(0, 1fr) minmax(270px, .7fr); align-items:stretch; }
-  .attendance-row__action { border-top:0; border-left:1px solid var(--border); }
+  .attendance-card { grid-template-columns:minmax(0, 1.1fr) minmax(290px, .9fr); align-items:stretch; }
+  .attendance-card__next-step { border-top:0; border-left:1px solid var(--border); }
   .session-fields { grid-template-columns:1fr 1fr; align-items:end; }
 }
 @media (max-width: 759px) {
