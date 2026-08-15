@@ -81,7 +81,7 @@ Run: `git diff --check && npm test`
 
 Expected: no whitespace errors and all tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add web/js/views/people.js web/styles/app.css tests/people-ui.test.js docs/superpowers/plans/2026-08-15-cards-central-atendimentos.md
