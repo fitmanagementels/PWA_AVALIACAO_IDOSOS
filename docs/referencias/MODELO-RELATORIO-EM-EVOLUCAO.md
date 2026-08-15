@@ -17,7 +17,7 @@ O relatório deve ser profissional o bastante para encaminhamento e claro o bast
 
 ### 2. Visão geral em linguagem simples
 
-Esta é a abertura do relatório e se destina principalmente à pessoa avaliada e ao familiar que a acompanha. A linguagem deve ser convidativa, explicativa e neutra. Ela será seguida de cartões com os domínios efetivamente testados: flexibilidade, mobilidade/equilíbrio, capacidade cardiorrespiratória e força. Cada cartão mostra apenas o resultado mais relevante e, se houver avaliação anterior comparável, a direção da mudança.
+Esta é a abertura do relatório e se destina principalmente à pessoa avaliada e ao familiar que a acompanha. A linguagem deve ser convidativa, explicativa e neutra. Ela será seguida de cartões com os domínios efetivamente testados: flexibilidade, mobilidade/equilíbrio, capacidade cardiorrespiratória e força. Cada cartão mostra apenas o resultado mais relevante e o rótulo objetivo de referência quando houver uma regra aplicável.
 
 Exemplo de linguagem: “No teste de caminhada de 4 metros, o tempo atual foi 5,8 s. Em relação à avaliação anterior, houve redução de 0,4 s.”
 
@@ -31,8 +31,8 @@ Esta segunda camada do PDF é destinada a profissionais internos e externos à e
 | --- | --- |
 | Nome do teste | Nome padronizado e domínio funcional |
 | Resultado | Valor oficial, unidade e lado/perna quando aplicável |
-| Classificação | Faixa de referência, quando disponível; caso contrário, “sem referência cadastrada” |
-| Evolução | Valor anterior comparável e diferença, quando existente |
+| Classificação | Faixa de referência e rótulo objetivo, somente quando houver regra aplicável |
+| Evolução | Valor anterior comparável e diferença, quando este módulo for implementado |
 | Detalhe técnico | Tentativas, escore, tempo mantido ou outra medida necessária à reprodução |
 
 O SPPB será apresentado com seus três componentes e o escore de cada um. O total só será exibido depois da validação das regras da tabela-fonte.
@@ -61,7 +61,7 @@ Quando existir texto, esta seção curta será inserida no final da primeira pá
 - Tipografia grande, contraste alto e poucas tabelas densas para favorecer leitura por pessoas idosas.
 - Cores nunca serão o único indicador de situação; ícones e texto acompanham qualquer cor.
 - Gráficos só aparecem quando houver pelo menos duas avaliações comparáveis.
-- Uma versão em PDF terá impressão A4 limpa e visualização digital confortável.
+- O formato aprovado é A5 digital, confortável em tablet e celular, sem depender de impressão.
 
 ## Dados que o relatório deve consumir
 
@@ -79,3 +79,5 @@ Quando existir texto, esta seção curta será inserida no final da primeira pá
 | 2026-07-31 | Confirmado no companion o modelo híbrido com página inicial explicativa e páginas técnicas posteriores. | Decisão final de hierarquia do relatório para a primeira entrega. |
 | 2026-07-31 | Definidas notas separadas: logística dos testes (interna) e observações sobre o aluno (exportável). | Resguardar informações operacionais e manter no PDF apenas a observação pertinente ao acompanhamento. |
 | 2026-07-31 | Definido o registro de teste não concluído com motivo, exportável no detalhamento técnico. | Diferenciar impossibilidade de execução, teste não selecionado e resultado válido. |
+| 2026-08-15 | Definida referência clínica versionada por resultado: idade na data da sessão, sexo quando aplicável, faixa utilizada e fonte são preservados. | Evitar alteração retroativa de relatórios quando uma tabela de referência evoluir. |
+| 2026-08-15 | Removido o rótulo de ausência de referência. | Valor sem regra aprovada deve permanecer objetivo e visualmente limpo. |

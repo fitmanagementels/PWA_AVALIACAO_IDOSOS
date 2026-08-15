@@ -61,7 +61,7 @@ O fluxo acima foi aprovado para a primeira entrega. Na tela da pessoa, os atalho
 - Uma avaliação não exige todos os testes do catálogo.
 - Testes não selecionados não aparecem como resultado ausente no relatório; eles aparecem, quando necessário, como “não realizado nesta avaliação”.
 - Uma avaliação em rascunho não entra em tendências clínicas até possuir pelo menos um resultado válido.
-- Resultados já salvos nunca são substituídos por valores de referência novos; a referência aplicada e a versão do protocolo devem acompanhar o resultado no futuro modelo de dados.
+- Resultados já salvos nunca são substituídos por valores de referência novos; `Resultados` preserva identificador, versão e retrato da referência aplicada, além da versão do protocolo.
 - Se um teste selecionado não puder ser concluído, o profissional poderá marcá-lo como “não concluído” e registrará o motivo (dor, insegurança, intercorrência, recusa ou texto livre). Essa ocorrência aparece no detalhamento técnico do PDF.
 
 ## 5. Catálogo obrigatório inicial de testes
@@ -106,7 +106,7 @@ Cada PDF retratará uma avaliação específica no momento de sua geração e se
 1. **Resumo para a pessoa avaliada e familiar:** abre o documento com mensagem simples, indicadores visuais de evolução quando houver comparação e uma lista clara do que foi avaliado. Essa primeira leitura deve ser convidativa e explicativa.
 2. **Registro técnico para profissionais:** vem depois do resumo e preserva identificação, data, testes realizados, valores brutos, lados, tentativas quando relevantes, referência utilizada, classificação, escores SPPB e observações do avaliador. Ele atende a consulta por profissionais da equipe ou externos.
 
-O relatório não exibirá diagnóstico automático. Itens sem referência aparecerão como valor mensurado e “sem classificação de referência cadastrada”. Testes não aplicados serão separados dos itens sem resultado para não sugerir falha na execução.
+O relatório não exibirá diagnóstico automático. Itens sem referência aparecerão somente como valor mensurado, sem rótulo de ausência. Testes não aplicados serão separados dos itens sem resultado para não sugerir falha na execução.
 
 O modelo vivo de conteúdo, hierarquia e exemplos está em `MODELO-RELATORIO-EM-EVOLUCAO.md` nesta mesma pasta.
 

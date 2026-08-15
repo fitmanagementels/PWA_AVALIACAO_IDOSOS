@@ -57,9 +57,28 @@ function numericField_(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function classificationForSavedResult_(result, person, assessmentDate, referenceRows) {
-  if (result.status !== 'concluido' || !person) return result.classificacao || '';
-  const classification = classifyReferenceValue_(referenceRows, {
+function savedReferenceApplication_(value) {
+  try {
+    const application = JSON.parse(value || '');
+    return application && application.faixa && application.rotulos ? application : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function classificationWithSavedReference_(application, value) {
+  if (!application || !Number.isFinite(value)) return application;
+  const range = application.faixa || {};
+  const labels = application.rotulos || {};
+  const classificacao = value < Number(range.min) ? labels.abaixo : value > Number(range.max) ? labels.acima : labels.normal;
+  return classificacao ? Object.assign({}, application, { classificacao: classificacao }) : application;
+}
+
+function referenceApplicationForSavedResult_(result, person, assessmentDate, referenceRows, storedApplicationJson) {
+  if (result.status !== 'concluido' || !person) return null;
+  const stored = savedReferenceApplication_(storedApplicationJson);
+  if (stored) return classificationWithSavedReference_(stored, numericField_(result.valorOficial));
+  return referenceApplicationForValue_(referenceRows, {
     testId: result.testeId,
     sex: person.sexo,
     age: ageOnDate(person.dataNascimento, assessmentDate),
@@ -67,7 +86,12 @@ function classificationForSavedResult_(result, person, assessmentDate, reference
     unit: result.unidade,
     assessmentDate: assessmentDate
   });
-  return classification || result.classificacao || '';
+}
+
+function classificationForSavedResult_(result, person, assessmentDate, referenceRows, storedApplicationJson) {
+  if (result.status !== 'concluido' || !person) return result.classificacao || '';
+  const application = referenceApplicationForSavedResult_(result, person, assessmentDate, referenceRows, storedApplicationJson);
+  return application ? application.classificacao : result.classificacao || '';
 }
 
 function backScratchReferenceRecord_() {
@@ -113,7 +137,7 @@ function seedBackScratchReference() {
 
 function removeResultsForTest_(avaliacaoId, testeId) { getRows_(SHEETS.RESULTS).filter(function(result) { return result.avaliacaoId === avaliacaoId && result.testeId === testeId; }).forEach(function(result) { deleteRowsByField_(SHEETS.ATTEMPTS, 'resultadoId', result.resultadoId); deleteRowsByField_(SHEETS.RESULTS, 'resultadoId', result.resultadoId); }); }
 function removeAssessmentTest(payload) { return withLock_(function() { const assessment = getRows_(SHEETS.ASSESSMENTS).find(function(row) { return row.avaliacaoId === payload.avaliacaoId; }); if (!assessment) return jsonError_('NOT_FOUND', 'Avaliação não encontrada'); if (assessment.status !== 'rascunho' && assessment.status !== 'pendenteDeSincronizacao') return jsonError_('INVALID_STATUS', 'Somente avaliações em rascunho podem ter testes retirados'); let selected = []; try { selected = JSON.parse(assessment.testesSelecionados || '[]'); } catch (_) {} if (!selected.includes(payload.testeId)) return jsonOk_(assessment); if (selected.length <= 1) return jsonError_('VALIDATION_ERROR', 'Uma avaliação precisa manter ao menos um teste'); assessment.testesSelecionados = JSON.stringify(selected.filter(function(testId) { return testId !== payload.testeId; })); assessment.ultimaAtualizacao = new Date().toISOString(); removeResultsForTest_(assessment.avaliacaoId, payload.testeId); updateRowById_(SHEETS.ASSESSMENTS, 'avaliacaoId', assessment); updateHistorySummary_(assessment, getRows_(SHEETS.RESULTS).filter(function(result) { return result.avaliacaoId === assessment.avaliacaoId; })); return jsonOk_(assessment); }); }
-function saveAssessment(payload) { return withLock_(function() { validateAssessment_(payload); const now = new Date().toISOString(); const person = getRows_(SHEETS.PEOPLE).find(function(item) { return item.pessoaId === payload.pessoaId; }) || null; const referenceRows = getRows_(SHEETS.REFERENCES); const selectedTestIds = payload.testesSelecionados || []; const record = { avaliacaoId: payload.avaliacaoId, pessoaId: payload.pessoaId, data: payload.data, profissionalNome: payload.profissionalNome, status: 'rascunho', testesSelecionados: JSON.stringify(selectedTestIds), notasTestes: payload.notasTestes || '', observacoesAluno: payload.observacoesAluno || '', criadoEm: payload.criadoEm || now, ultimaAtualizacao: now }; getRows_(SHEETS.RESULTS).filter(function(result) { return result.avaliacaoId === record.avaliacaoId && !selectedTestIds.includes(result.testeId); }).forEach(function(result) { deleteRowsByField_(SHEETS.ATTEMPTS, 'resultadoId', result.resultadoId); deleteRowsByField_(SHEETS.RESULTS, 'resultadoId', result.resultadoId); }); updateRowById_(SHEETS.ASSESSMENTS, 'avaliacaoId', record); const summaryResults = []; (payload.resultados || []).forEach(function(result) { const resultRecord = { resultadoId: result.resultadoId || Utilities.getUuid(), avaliacaoId: record.avaliacaoId, testeId: result.testeId, status: result.status, lado: result.lado || '', valorOficial: fieldOrBlank_(result.valorOficial), unidade: result.unidade || '', classificacao: classificationForSavedResult_(result, person, payload.data, referenceRows), protocoloVersao: result.protocoloVersao || 1, motivoNaoConcluido: result.motivoNaoConcluido || '' }; summaryResults.push(resultRecord); updateRowById_(SHEETS.RESULTS, 'resultadoId', resultRecord); (result.tentativas || []).forEach(function(attempt) { updateRowById_(SHEETS.ATTEMPTS, 'tentativaId', { tentativaId: attempt.tentativaId || Utilities.getUuid(), resultadoId: resultRecord.resultadoId, ordem: attempt.ordem, lado: attempt.lado || '', valor: fieldOrBlank_(attempt.valor), unidade: attempt.unidade, valida: attempt.valida !== false, criadoEm: now }); }); }); updateHistorySummary_(record, summaryResults); return jsonOk_({ avaliacaoId: record.avaliacaoId, ultimaAtualizacao: now }); }); }
+function saveAssessment(payload) { return withLock_(function() { validateAssessment_(payload); const now = new Date().toISOString(); const person = getRows_(SHEETS.PEOPLE).find(function(item) { return item.pessoaId === payload.pessoaId; }) || null; const referenceRows = getRows_(SHEETS.REFERENCES); const selectedTestIds = payload.testesSelecionados || []; const record = { avaliacaoId: payload.avaliacaoId, pessoaId: payload.pessoaId, data: payload.data, profissionalNome: payload.profissionalNome, status: 'rascunho', testesSelecionados: JSON.stringify(selectedTestIds), notasTestes: payload.notasTestes || '', observacoesAluno: payload.observacoesAluno || '', criadoEm: payload.criadoEm || now, ultimaAtualizacao: now }; const storedResults = getRows_(SHEETS.RESULTS).filter(function(result) { return result.avaliacaoId === record.avaliacaoId; }); storedResults.filter(function(result) { return !selectedTestIds.includes(result.testeId); }).forEach(function(result) { deleteRowsByField_(SHEETS.ATTEMPTS, 'resultadoId', result.resultadoId); deleteRowsByField_(SHEETS.RESULTS, 'resultadoId', result.resultadoId); }); updateRowById_(SHEETS.ASSESSMENTS, 'avaliacaoId', record); const summaryResults = []; (payload.resultados || []).forEach(function(result) { const resultId = result.resultadoId || Utilities.getUuid(); const stored = storedResults.find(function(item) { return item.resultadoId === resultId; }) || null; const application = referenceApplicationForSavedResult_(result, person, payload.data, referenceRows, stored && stored.referenciaAplicadaJson); const resultRecord = { resultadoId: resultId, avaliacaoId: record.avaliacaoId, testeId: result.testeId, status: result.status, lado: result.lado || '', valorOficial: fieldOrBlank_(result.valorOficial), unidade: result.unidade || '', classificacao: application ? application.classificacao : classificationForSavedResult_(result, person, payload.data, referenceRows, stored && stored.referenciaAplicadaJson), protocoloVersao: result.protocoloVersao || 1, motivoNaoConcluido: result.motivoNaoConcluido || '', referenciaId: application ? application.referenciaId : '', referenciaVersao: application ? application.referenciaVersao : '', referenciaAplicadaJson: application ? JSON.stringify(application) : '' }; summaryResults.push(resultRecord); updateRowById_(SHEETS.RESULTS, 'resultadoId', resultRecord); (result.tentativas || []).forEach(function(attempt) { updateRowById_(SHEETS.ATTEMPTS, 'tentativaId', { tentativaId: attempt.tentativaId || Utilities.getUuid(), resultadoId: resultRecord.resultadoId, ordem: attempt.ordem, lado: attempt.lado || '', valor: fieldOrBlank_(attempt.valor), unidade: attempt.unidade, valida: attempt.valida !== false, criadoEm: now }); }); }); updateHistorySummary_(record, summaryResults); return jsonOk_({ avaliacaoId: record.avaliacaoId, ultimaAtualizacao: now }); }); }
 function assessmentCanComplete_(payload) { const selected = payload.testesSelecionados || []; const results = payload.resultados || []; if (selected.some(function(id) { return !results.some(function(result) { return result.testeId === id; }); })) throw new Error('Preencha ou informe o motivo para todos os testes selecionados'); results.forEach(function(result) { if (result.status === 'naoConcluido' && !String(result.motivoNaoConcluido || '').trim()) throw new Error('Informe o motivo do teste não concluído'); }); }
 function archiveOtherActiveDrafts_(pessoaId, concludedAssessmentId) {
   const now = new Date().toISOString();

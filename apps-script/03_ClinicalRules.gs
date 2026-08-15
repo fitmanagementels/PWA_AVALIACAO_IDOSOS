@@ -52,6 +52,11 @@ function activeReference_(rows, testId, assessmentDate) {
 }
 
 function classifyReferenceValue_(referenceRows, input) {
+  const application = referenceApplicationForValue_(referenceRows, input);
+  return application ? application.classificacao : null;
+}
+
+function referenceApplicationForValue_(referenceRows, input) {
   const reference = activeReference_(referenceRows, input.testId, input.assessmentDate);
   if (!reference || !Number.isFinite(input.value)) return null;
   let criteria;
@@ -61,7 +66,20 @@ function classifyReferenceValue_(referenceRows, input) {
     return item.sexo === input.sex && input.age >= item.idadeMin && input.age <= item.idadeMax;
   });
   if (!range) return null;
-  if (input.value < range.normalMin) return criteria.rotulos && criteria.rotulos.abaixo || null;
-  if (input.value > range.normalMax) return criteria.rotulos && criteria.rotulos.acima || null;
-  return criteria.rotulos && criteria.rotulos.normal || null;
+  const rotulos = criteria.rotulos || {};
+  const classificacao = input.value < range.normalMin ? rotulos.abaixo : input.value > range.normalMax ? rotulos.acima : rotulos.normal;
+  if (!classificacao) return null;
+  return {
+    referenciaId: reference.referenciaId,
+    referenciaVersao: Number(reference.versao || 0),
+    vigencia: referenceDateKey_(reference.vigencia),
+    modelo: criteria.modelo,
+    fonte: criteria.fonte || '',
+    sexo: input.sex,
+    idadeNaAvaliacao: input.age,
+    faixaEtaria: { min: range.idadeMin, max: range.idadeMax },
+    faixa: { min: range.normalMin, max: range.normalMax, unidade: criteria.unidade },
+    rotulos: { abaixo: rotulos.abaixo || '', normal: rotulos.normal || '', acima: rotulos.acima || '' },
+    classificacao: classificacao
+  };
 }

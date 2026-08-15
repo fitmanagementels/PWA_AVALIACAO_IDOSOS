@@ -3,8 +3,21 @@ function spreadsheet_() {
   return id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActiveSpreadsheet();
 }
 
+function ensureSheetHeaders_(sheetName, sheet) {
+  const expected = SHEET_HEADERS[sheetName] || [];
+  if (!sheet || !expected.length) return;
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(expected);
+    return;
+  }
+  const current = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(String);
+  const missing = expected.filter(function(header) { return !current.includes(header); });
+  if (missing.length) sheet.getRange(1, current.length + 1, 1, missing.length).setValues([missing]);
+}
+
 function getRows_(sheetName) {
   const sheet = spreadsheet_().getSheetByName(sheetName);
+  ensureSheetHeaders_(sheetName, sheet);
   if (!sheet || sheet.getLastRow() < 2) return [];
   const values = sheet.getDataRange().getValues();
   return values.slice(1).map(function(row) { return values[0].reduce(function(record, header, index) { record[header] = row[index]; return record; }, {}); });
@@ -12,12 +25,14 @@ function getRows_(sheetName) {
 
 function appendRow_(sheetName, record) {
   const sheet = spreadsheet_().getSheetByName(sheetName);
+  ensureSheetHeaders_(sheetName, sheet);
   const headers = SHEET_HEADERS[sheetName];
   sheet.appendRow(headers.map(function(header) { return record[header] === undefined ? '' : record[header]; }));
 }
 
 function updateRowById_(sheetName, idColumn, record) {
   const sheet = spreadsheet_().getSheetByName(sheetName); const headers = SHEET_HEADERS[sheetName];
+  ensureSheetHeaders_(sheetName, sheet);
   const rows = getRows_(sheetName); const index = rows.findIndex(function(row) { return row[idColumn] === record[idColumn]; });
   if (index === -1) return appendRow_(sheetName, record);
   sheet.getRange(index + 2, 1, 1, headers.length).setValues([headers.map(function(header) { return record[header] === undefined ? '' : record[header]; })]);
@@ -40,7 +55,7 @@ function fieldOrBlank_(value) { return value === undefined || value === null ? '
 
 function setupSpreadsheet() {
   const book = spreadsheet_();
-  Object.keys(SHEET_HEADERS).forEach(function(name) { const sheet = book.getSheetByName(name) || book.insertSheet(name); if (sheet.getLastRow() === 0) sheet.appendRow(SHEET_HEADERS[name]); });
+  Object.keys(SHEET_HEADERS).forEach(function(name) { ensureSheetHeaders_(name, book.getSheetByName(name) || book.insertSheet(name)); });
   if (!getRows_(SHEETS.PROFESSIONALS).length) PROFESSIONALS.forEach(function(name) { appendRow_(SHEETS.PROFESSIONALS, { profissionalId: Utilities.getUuid(), nome: name, ativo: true }); });
   return jsonOk_({ sheets: Object.keys(SHEET_HEADERS) });
 }

@@ -76,6 +76,68 @@ test('uses the Back Scratch reference for each saved bilateral result', () => {
   assert.equal(classificationForSavedResult({ testeId: 'back-scratch', status: 'naoConcluido', valorOficial: -14, unidade: 'cm', classificacao: 'preservar' }, person, '2026-08-10', rows), 'preservar');
 });
 
+test('creates an immutable snapshot of the Back Scratch reference applied to a result', () => {
+  const referenceApplicationForSavedResult = backendHelper('referenceApplicationForSavedResult_');
+  const application = referenceApplicationForSavedResult(
+    { testeId: 'back-scratch', status: 'concluido', valorOficial: -14, unidade: 'cm' },
+    { sexo: 'feminino', dataNascimento: '1946-08-10' },
+    '2026-08-10',
+    [backScratchReferenceRow()]
+  );
+
+  assert.deepEqual(application, {
+    referenciaId: 'ref-back-scratch-v1',
+    referenciaVersao: 1,
+    vigencia: '2026-08-10',
+    modelo: 'faixas-por-sexo-e-idade',
+    fonte: 'Tabela de referência fornecida pelo responsável do projeto em 10/08/2026',
+    sexo: 'feminino',
+    idadeNaAvaliacao: 80,
+    faixaEtaria: { min: 80, max: 84 },
+    faixa: { min: -14, max: 0, unidade: 'cm' },
+    rotulos: { abaixo: 'Abaixo da média', normal: 'Normal', acima: 'Acima da média' },
+    classificacao: 'Normal'
+  });
+});
+
+test('keeps the saved reference range when an old result is edited after a reference update', () => {
+  const referenceApplicationForSavedResult = backendHelper('referenceApplicationForSavedResult_');
+  const person = { sexo: 'feminino', dataNascimento: '1946-08-10' };
+  const original = referenceApplicationForSavedResult(
+    { testeId: 'back-scratch', status: 'concluido', valorOficial: -14, unidade: 'cm' },
+    person,
+    '2026-08-10',
+    [backScratchReferenceRow()]
+  );
+  const newerReference = backScratchReferenceRow();
+  newerReference.referenciaId = 'ref-back-scratch-v2';
+  newerReference.versao = 2;
+  newerReference.vigencia = '2026-08-10';
+  const newerCriteria = JSON.parse(newerReference.criteriosJson);
+  newerCriteria.faixas.find((item) => item.sexo === 'feminino' && item.idadeMin === 80).normalMax = -5;
+  newerReference.criteriosJson = JSON.stringify(newerCriteria);
+
+  const edited = referenceApplicationForSavedResult(
+    { testeId: 'back-scratch', status: 'concluido', valorOficial: 0, unidade: 'cm' },
+    person,
+    '2026-08-10',
+    [newerReference],
+    JSON.stringify(original)
+  );
+
+  assert.equal(edited.referenciaId, 'ref-back-scratch-v1');
+  assert.deepEqual(edited.faixa, { min: -14, max: 0, unidade: 'cm' });
+  assert.equal(edited.classificacao, 'Normal');
+});
+
+test('declares immutable applied-reference fields in stored results', () => {
+  const config = fs.readFileSync('apps-script/00_Config.gs', 'utf8');
+  const assessments = fs.readFileSync('apps-script/04_Assessments.gs', 'utf8');
+
+  assert.match(config, /'referenciaId', 'referenciaVersao', 'referenciaAplicadaJson'/);
+  assert.match(assessments, /referenciaAplicadaJson/);
+});
+
 test('builds the exact active Back Scratch reference record', () => {
   const record = backendHelper('backScratchReferenceRecord_')();
   const criteria = JSON.parse(record.criteriosJson);

@@ -3,7 +3,7 @@ import { renderAssessmentEditor } from './assessment-editor.js';
 import { groupHistoryByMonth, historyTimeline } from './history.js';
 import { buildAttendanceItems } from './attendance-center.js';
 import { defaultReportTestIds } from './report-selection.js';
-import { formatDateBr } from '../date-format.js';
+import { ageInYears, formatDateBr } from '../date-format.js';
 import { filterHistory, readHistoryCache, writeHistoryCache } from '../history-cache.js';
 import { hasPendingAssessmentMutation, queueMutation } from '../storage.js';
 import { assessmentForCreate, assessmentFromApi, historySummaryFromApi, personForSave, personFromApi, resultsFromApi } from '../sync-model.js';
@@ -85,7 +85,7 @@ function readLocalAssessment(id) {
   try { return JSON.parse(localStorage.getItem(`assessment:${id}`) || 'null'); } catch (_) { return null; }
 }
 function attendanceRowMarkup({ person, kind, draft, history }) {
-  const profile = `${formatDateBr(person.birthDate)} · ${person.sex}`;
+  const profile = `${ageInYears(person.birthDate)} anos · ${person.sex}`;
   const completed = history?.status === 'concluida' ? `<span>Última concluída: ${formatDateBr(history.date)}</span>` : '';
   if (kind === 'draft') return attendanceCardMarkup(person, profile, `<span class="state-chip neutral">Rascunho neste aparelho</span>${completed}<button class="secondary" data-resume-id="${person.id}">Retomar rascunho</button>`);
   if (kind === 'remote-draft') return attendanceCardMarkup(person, profile, `<span class="state-chip neutral">Avaliação em andamento</span>${completed}<button class="secondary" data-remote-resume-id="${person.id}" data-assessment-id="${person.flow.rascunhoAtivo.avaliacaoId}">Retomar avaliação</button>`);
@@ -106,7 +106,7 @@ function renderPersonForm(root) {
 function renderPerson(root, id) {
   startNavigation('person');
   const person = read().find((item) => item.id === id); if (!person) return renderPeople(root); const link = whatsAppUrl(person.whatsapp);
-  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${formatDateBr(person.birthDate)} · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
+  root.innerHTML = `<section class="screen-title"><div><p class="eyebrow">PESSOA AVALIADA</p><h1>${person.name}</h1><p>${ageInYears(person.birthDate)} anos · ${person.sex}</p></div><button class="secondary" data-back>Voltar</button></section><section class="action-grid"><button data-start>+ Nova avaliação</button><button class="secondary" data-resume>↺ Retomar rascunho</button><button class="secondary" data-history>↗ Histórico</button></section>${link ? `<a class="whatsapp-link" href="${link}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>` : '<p class="muted">Sem WhatsApp cadastrado.</p>'}`;
   root.querySelector('[data-back]').onclick = () => renderPeople(root); root.querySelector('[data-start]').onclick = () => startAssessmentFlow(root, person); root.querySelector('[data-resume]').onclick = () => {
     const localDraft = localAssessmentsFor(person.id).find((assessment) => assessment.status === 'rascunho' || assessment.status === 'pendenteDeSincronizacao');
     if (localDraft) return resumeLatestDraft(root, person);

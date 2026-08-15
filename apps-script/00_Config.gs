@@ -19,7 +19,7 @@ const SHEET_HEADERS = {
   Pessoas: ['pessoaId', 'nomeCompleto', 'dataNascimento', 'sexo', 'whatsApp', 'status', 'criadoEm'],
   Profissionais: ['profissionalId', 'nome', 'ativo'],
   Avaliacoes: ['avaliacaoId', 'pessoaId', 'data', 'profissionalNome', 'status', 'testesSelecionados', 'notasTestes', 'observacoesAluno', 'criadoEm', 'ultimaAtualizacao'],
-  Resultados: ['resultadoId', 'avaliacaoId', 'testeId', 'status', 'lado', 'valorOficial', 'unidade', 'classificacao', 'protocoloVersao', 'motivoNaoConcluido'],
+  Resultados: ['resultadoId', 'avaliacaoId', 'testeId', 'status', 'lado', 'valorOficial', 'unidade', 'classificacao', 'protocoloVersao', 'motivoNaoConcluido', 'referenciaId', 'referenciaVersao', 'referenciaAplicadaJson'],
   Tentativas: ['tentativaId', 'resultadoId', 'ordem', 'lado', 'valor', 'unidade', 'valida', 'criadoEm'],
   HistoricoResumo: ['resumoId', 'pessoaId', 'avaliacaoId', 'data', 'profissionalNome', 'status', 'testesSelecionados', 'resultadosResumoJson', 'ultimaAtualizacao'],
   CatalogoTestes: ['testeId', 'nome', 'dominio', 'unidade', 'configuracaoJson'],

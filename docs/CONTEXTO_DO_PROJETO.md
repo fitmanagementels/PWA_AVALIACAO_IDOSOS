@@ -33,11 +33,11 @@ Uma avaliação representa uma sessão, ainda que precise ser retomada em outro 
 
 ## Dados e regras relevantes
 
-- Cadastro atual: nome completo, data de nascimento, sexo e WhatsApp. Informações diagnósticas permanecem fora do escopo até o módulo de anamnese.
+- Cadastro atual: nome completo, data de nascimento, sexo e WhatsApp. Fora da edição, a PWA mostra a idade atual; a data de nascimento permanece restrita ao formulário. Informações diagnósticas permanecem fora do escopo até o módulo de anamnese.
 - Avaliação: responsável, testes selecionados, status, notas internas e observações sobre o aluno.
 - **Notas sobre os testes** são internas e não entram no relatório.
 - **Observações do profissional sobre o aluno** aparecem no relatório somente quando preenchidas.
-- Resultado: valor oficial, unidade, lado quando aplicável, classificação quando existir referência e tentativas ordenadas.
+- Resultado: valor oficial, unidade, lado quando aplicável, classificação quando existir referência e tentativas ordenadas. Quando uma referência é aplicada, o resultado preserva seu identificador, versão e um retrato da faixa usada (sexo, idade na sessão, limites, rótulos e fonte).
 - Resultado oficial é o melhor valor conforme o teste; cada tentativa bruta continua armazenada para revisão.
 - Teste não concluído exige motivo e não recebe classificação numérica.
 - A PWA não deve produzir diagnóstico, prescrição ou interpretação clínica sem regra validada.
@@ -52,6 +52,14 @@ Uma avaliação representa uma sessão, ainda que precise ser retomada em outro 
 | Força isométrica máxima | Extensão de joelho unilateral; remada unilateral, ambas em kgf com dinamômetro de tensão |
 
 Referências e classificações precisam ser aplicadas apenas quando estiverem configuradas e validadas no projeto. Resultados de força permanecem medidas objetivas até haver referência clínica aprovada.
+
+### Contrato de referências clínicas
+
+- A aba `Referencias` é a fonte oficial; cada linha representa uma versão de regra para um teste e mantém seus critérios em `criteriosJson`.
+- O Apps Script escolhe a referência ativa pela data da avaliação, calcula a idade naquela data e cruza sexo/faixa etária quando o modelo exigir.
+- Uma referência inexistente ou incompatível não gera rótulo, cor ou mensagem de ausência no resultado; o valor objetivo permanece visível.
+- Alterar uma referência não reinterpreta avaliações já registradas. Para cada resultado classificado, é guardado o retrato da referência aplicada.
+- Novas referências serão cadastradas uma a uma, a partir dos critérios e da fonte informados pelo responsável do projeto.
 
 ## Relatório em PDF
 

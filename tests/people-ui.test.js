@@ -23,6 +23,13 @@ test('renders each attendance as a separated operational card', () => {
   assert.doesNotMatch(source, /class="attendance-row"/);
 });
 
+test('shows current age instead of birth date outside the profile editor', () => {
+  assert.match(source, /ageInYears/);
+  assert.match(source, /\$\{ageInYears\(person\.birthDate\)\} anos/);
+  assert.doesNotMatch(source, /const profile = `\$\{formatDateBr\(person\.birthDate\)\}/);
+  assert.doesNotMatch(source, /<p>\$\{formatDateBr\(person\.birthDate\)\}/);
+});
+
 test('prevents a silent second draft and offers an explicit archive path', () => {
   assert.match(source, /function startAssessmentFlow\(/);
   assert.match(source, /function renderActiveDraftNotice\(/);
