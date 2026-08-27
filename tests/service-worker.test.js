@@ -5,7 +5,7 @@ import test from 'node:test';
 test('installs a new cache version and removes the obsolete application shell', () => {
   const source = fs.readFileSync('web/sw.js', 'utf8');
 
-  assert.match(source, /const CACHE = 'avaliacao-idosos-v31';/);
+  assert.match(source, /const CACHE = 'avaliacao-idosos-v33';/);
   assert.match(source, /date-format\.js/);
   assert.match(source, /history-cache\.js/);
   assert.match(source, /result-presentation\.js/);
@@ -25,4 +25,17 @@ test('installs a new cache version and removes the obsolete application shell', 
   assert.match(source, /self\.skipWaiting\(\)/);
   assert.match(source, /caches\.keys\(\)/);
   assert.match(source, /cacheName !== CACHE/);
+});
+
+test('nunca armazena respostas da API ou de origens externas', () => {
+  const source = fs.readFileSync('web/sw.js', 'utf8');
+  assert.match(source, /url\.origin !== self\.location\.origin/);
+  assert.match(source, /url\.pathname\.startsWith\('\/api\/'\)/);
+  assert.doesNotMatch(source, /script\.google\.com/);
+});
+
+test('inclui todos os módulos locais necessários no shell offline', () => {
+  const source = fs.readFileSync('web/sw.js', 'utf8');
+  assert.match(source, /\.\/js\/cloudflare-adapter\.js/);
+  assert.match(source, /\.\/js\/auth-session\.js/);
 });

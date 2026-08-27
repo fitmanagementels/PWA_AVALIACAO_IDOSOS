@@ -1,5 +1,62 @@
+import { fromCloudflareResponse, toCloudflarePayload } from './cloudflare-adapter.js';
+import { promptGoogleSession } from './auth-session.js';
+
 export class ApiError extends Error {
   constructor(code, message) { super(message); this.code = code; }
+}
+
+function cloudflareRoute(action, payload) {
+  const id = (value) => encodeURIComponent(value || '');
+  const assessmentId = payload.avaliacaoId || payload.assessmentId;
+  const personId = payload.pessoaId || payload.personId;
+  const routes = {
+    listPeople: ['GET', '/api/people'],
+    savePerson: ['POST', '/api/people'],
+    getPerson: ['GET', `/api/people/${id(personId)}`],
+    getPersonFlow: ['GET', `/api/people/${id(personId)}/flow`],
+    getHistory: ['GET', `/api/people/${id(personId)}/history`],
+    getHistorySummary: ['GET', `/api/people/${id(personId)}/history`],
+    getCatalog: ['GET', '/api/catalog'],
+    listArchivedDrafts: ['GET', '/api/assessments?status=arquivada'],
+    createAssessment: ['POST', '/api/assessments'],
+    getAssessment: ['GET', `/api/assessments/${id(assessmentId)}`],
+    saveAssessment: ['PUT', `/api/assessments/${id(assessmentId)}`],
+    completeAssessment: ['POST', `/api/assessments/${id(assessmentId)}/complete`],
+    archiveAssessment: ['POST', `/api/assessments/${id(assessmentId)}/archive`],
+    removeAssessmentTest: ['DELETE', `/api/assessments/${id(assessmentId)}/tests/${id(payload.testeId || payload.testId)}`],
+    deleteArchivedAssessment: ['DELETE', `/api/assessments/${id(assessmentId)}`],
+  };
+  return routes[action] || null;
+}
+
+async function requestFromCloudflare(action, payload) {
+  const route = cloudflareRoute(action, payload);
+  if (!route) throw new ApiError('NOT_FOUND', 'Ação não disponível na API Cloudflare');
+  const [method, path] = route;
+  const cloudflarePayload = toCloudflarePayload(action, payload);
+  const token = await window.getIdentityToken?.();
+  if (!token) throw new ApiError('UNAUTHORIZED', 'Entre com a conta Google autorizada para continuar.');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(`${window.APP_API_URL.replace(/\/$/, '')}${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, ...(method === 'GET' || method === 'DELETE' ? {} : { 'Content-Type': 'application/json' }) },
+      ...(method === 'GET' || method === 'DELETE' ? {} : { body: JSON.stringify(cloudflarePayload) }),
+      credentials: 'omit', signal: controller.signal,
+    });
+    const body = await response.json();
+    if (!body.ok) {
+      if (response.status === 401 || body.error?.code === 'UNAUTHORIZED') promptGoogleSession();
+      throw new ApiError(body.error?.code || 'NETWORK_ERROR', body.error?.message || 'Não foi possível sincronizar');
+    }
+    return fromCloudflareResponse(action, body);
+  } catch (error) {
+    if (error.name === 'AbortError') throw new ApiError('NETWORK_TIMEOUT', 'A sincronização demorou demais. Os dados continuam salvos neste aparelho.');
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function requestFromAppsScript(action, payload) {
@@ -16,6 +73,7 @@ function requestFromAppsScript(action, payload) {
 
 export async function request(action, payload = {}, method = 'POST') {
   if (window.APP_RUNTIME === 'apps-script') return requestFromAppsScript(action, payload);
+  if (window.APP_BACKEND === 'cloudflare') return requestFromCloudflare(action, payload);
   const baseUrl = window.APP_API_URL;
   if (!baseUrl) throw new ApiError('CONFIGURATION_ERROR', 'Defina APP_API_URL antes de sincronizar');
   const url = method === 'GET' ? `${baseUrl}?${new URLSearchParams({ action, ...payload })}` : baseUrl;

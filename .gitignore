@@ -1,3 +1,5 @@
 .superpowers/
 .worktrees/
 .clasp.json
+node_modules/
+worker/.wrangler/

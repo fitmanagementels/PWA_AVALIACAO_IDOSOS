@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "pwa-avaliacao-idosos-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-26",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pwa-avaliacao-idosos",
+      "database_id": "1fd7cb5a-0de2-4e20-8672-12ca4aa3f46b",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGIN": "https://pwa-avaliacao-idosos.pages.dev",
+    "GOOGLE_CLIENT_ID": "831661221645-ua8qquqmmaou3rfthbqbqcrk89kjce63.apps.googleusercontent.com"
+  }
+}

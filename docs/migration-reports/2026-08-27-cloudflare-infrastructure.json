@@ -1,0 +1,24 @@
+{
+  "phase": "infrastructure_ready_pending_data_cutover",
+  "validatedAt": "2026-08-27T21:23:26.000Z",
+  "pagesUrl": "https://pwa-avaliacao-idosos.pages.dev",
+  "workerUrl": "https://pwa-avaliacao-idosos-api.fitmanagement-els.workers.dev",
+  "migrationsApplied": [
+    "0001_initial.sql",
+    "0002_seed_catalog.sql"
+  ],
+  "remoteSeedCounts": {
+    "professionals": 4,
+    "catalogTests": 6,
+    "people": 0
+  },
+  "validation": {
+    "health": 200,
+    "unauthenticatedApi": 401,
+    "pagesSecurityHeaders": true
+  },
+  "pendingExternalDependencies": [
+    "Exportação somente leitura do Google Sheets e importação com checksum aprovado",
+    "Inclusão da origem Pages no Google OAuth Web Client"
+  ]
+}

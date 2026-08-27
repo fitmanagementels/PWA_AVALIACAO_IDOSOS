@@ -1,4 +1,5 @@
 import { hasPendingAssessmentMutation, mutationQueue } from './storage.js';
+import { initializeGoogleSession } from './auth-session.js';
 import { request } from './api-client.js';
 import { flushQueue, pendingStatus } from './sync-status.js';
 import { renderSyncPanel } from './views/sync-panel.js';
@@ -10,6 +11,7 @@ const status = document.querySelector('[data-sync-status]');
 const syncDock = document.querySelector('[data-sync-dock]');
 const root = document.querySelector('#app');
 let syncPromise = null;
+const cloudflareBackend = window.APP_BACKEND === 'cloudflare';
 function setStatus(text) { status.textContent = text; }
 function renderStatus(state) { setStatus(state.message); renderSyncPanel(syncDock, state, { onRetry: synchronize }); }
 function localAssessments() {
@@ -62,5 +64,16 @@ window.scheduleSync = () => queueMicrotask(() => { synchronize().catch(() => {})
 if (window.APP_RUNTIME !== 'apps-script' && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 renderStatus({ phase: navigator.onLine ? 'synced' : 'offline', pendingCount: 0, message: navigator.onLine ? 'Tudo sincronizado' : 'offline · alterações protegidas neste aparelho', items: [] });
 renderPeople(root);
-refreshPeople().catch(() => setStatus('dados locais · sincronização indisponível'));
-if (navigator.onLine) synchronize();
+if (cloudflareBackend) {
+  initializeGoogleSession({
+    clientId: window.GOOGLE_CLIENT_ID,
+    onSignedIn: () => {
+      refreshPeople().catch(() => setStatus('dados locais · atualização compartilhada pendente'));
+      if (navigator.onLine) synchronize().catch(() => {});
+    },
+    onError: (error) => setStatus(error.message || 'Aguardando login com Google.'),
+  });
+} else {
+  refreshPeople().catch(() => setStatus('dados locais · sincronização indisponível'));
+  if (navigator.onLine) synchronize();
+}
