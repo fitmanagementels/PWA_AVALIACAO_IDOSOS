@@ -2,10 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-test('oferece exportação única em arquivo sem gravar os dados no Drive', () => {
+test('gera arquivo temporário de exportação para projeto Apps Script independente da planilha', () => {
   const source = readFileSync('apps-script/07_ExportMigration.gs', 'utf8');
-  assert.match(source, /function exportMigrationDataDownload\(\)/);
-  assert.match(source, /download = 'pwa-avaliacao-export\.json'/);
-  assert.match(source, /SpreadsheetApp\.getUi\(\)\.showModalDialog/);
-  assert.doesNotMatch(source, /DriveApp\./);
+  assert.match(source, /function exportMigrationDataToTemporaryFile\(\)/);
+  assert.match(source, /DriveApp\.createFile\('pwa-avaliacao-export\.json', exportMigrationData\(\), MimeType\.JSON\)/);
+  assert.doesNotMatch(source, /SpreadsheetApp\.getUi\(\)/);
 });
